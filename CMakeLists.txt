@@ -4,6 +4,9 @@
 #
 cmake_minimum_required(VERSION 2.6.3)
 
+set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_CXX_FLAGS "-fpermissive")
+
 #
 # This creates a standard cmake project. You may extend this file with
 # any cmake macro you see fit.
@@ -15,6 +18,18 @@ find_package(OROCOS-RTT QUIET)
 if (NOT OROCOS-RTT_FOUND)
   message (FATAL_ERROR "\nCould not find Orocos. Please use the shell command\n 'source orocos_toolchain/env.sh' and then run cmake again.")
 endif()
+
+find_package(PkgConfig REQUIRED)
+
+PKG_CHECK_MODULES(PC_EIGEN eigen_lgsm REQUIRED)
+if(NOT PC_EIGEN_FOUND)
+    message("Failed to detect Eigen, check PKG_CONFIG_PATH." )
+endif(NOT PC_EIGEN_FOUND)
+
+PKG_CHECK_MODULES(PC_MINGXINGCONTROLLER MingXingController REQUIRED)
+if(NOT PC_MINGXINGCONTROLLER_FOUND)
+    message("Failed to detect MingXingController, check PKG_CONFIG_PATH." )
+endif(NOT PC_MINGXINGCONTROLLER_FOUND)
 
 # Defines the orocos_* cmake macros. See that file for additional
 # documentation.

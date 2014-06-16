@@ -10,9 +10,9 @@
 #include <friRTNetExampleAbstract.hpp>
 #include <Eigen/Dense>
 
-class KukaModelFromFriRTNET : public FriRTNetExampleAbstract{
+class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
-        KukaModelFromFriRTNET(std::string const& name);
+        KukaMingXingControllerRTNET(std::string const& name);
 
         RTT::InputPort<double> port_i;
 

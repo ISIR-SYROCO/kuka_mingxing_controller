@@ -7,16 +7,14 @@
 #include <rtt/Component.hpp>
 #include <iostream>
 
-KukaModelFromFriRTNET::KukaModelFromFriRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
+KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
     this->addPort("port_i", port_i);
     this->addPort("port_o", port_o);
 }
 
-void KukaModelFromFriRTNET::updateHook(){
+void KukaMingXingControllerRTNET::updateHook(){
    fri_frm_krl = m_fromFRI.get(); 
    if(fri_frm_krl.intData[0] == 1){ //command mode
-
-       RTT::FlowStatus distanceFS = port_distance.read(distance);
 
        std::vector<double> JState(LWRDOF);
 
@@ -41,4 +39,4 @@ void KukaModelFromFriRTNET::updateHook(){
  * If you have put your component class
  * in a namespace, don't forget to add it here too:
  */
-ORO_CREATE_COMPONENT(KukaMingXingController)
+ORO_CREATE_COMPONENT(KukaMingXingControllerRTNET)

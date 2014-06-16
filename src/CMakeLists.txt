@@ -1,4 +1,13 @@
-include_directories(${PROJECT_SOURCE_DIR}/include)
+include_directories(
+    ${PROJECT_SOURCE_DIR}/include
+    ${PC_EIGEN_INCLUDE_DIRS}
+    ${PC_MINGXINGCONTROLLER_INCLUDE_DIRS}
+)
+
+link_directories(
+    ${PC_MINGXINGCONTROLLER_LIBRARY_DIRS}
+)
+
 #
 # Components, types and plugins.
 #
@@ -9,8 +18,10 @@ include_directories(${PROJECT_SOURCE_DIR}/include)
 
 # Creates a component library libKukaModelFromFri-<target>.so
 # and installs in the directory lib/orocos/
-#
-orocos_component(KukaMingXingController kukaMingXingController-rtnetcomponent.cpp) # ...you may add multiple source files
+#	
+orocos_library(ModelKukaFixed kukafixed.cpp)	
+orocos_component(KukaMingXingController kukaMingXingController-rtnetcomponent.cpp) # ...you may add multiple source files.
+target_link_libraries(ModelKukaFixed ${PC_MINGXINGCONTROLLER_LIBRARIES})
 #
 # You may add multiple orocos_component statements.
 
