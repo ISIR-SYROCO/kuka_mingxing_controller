@@ -8,7 +8,23 @@
 #include <iostream>
 
 KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
+	model = new kukafixed("kuka");
+	ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
+        FMS = new orc::FullModelState("torqueTask.FModelState", *model, orc::FullState::INTERNAL);
+        FTS = new orc::FullTargetState("torqueTask.FTargetState", *model, orc::FullState::INTERNAL);
+        feat = new orc::FullStateFeature("torqueTask", *FMS);
+        featDes = new orc::FullStateFeature("torqueTask.Des", *FTS);
+	
+	Eigen::VectorXd qdes_task1(7);
+	qdes_task1<<0.25,0.25,0.25,0.25,0.25,0.25,0.25;
+	FTS->set_q(qdes_task1);
+	
+	accTask = &(ctrl->createGHCJTTask("accTask", *feat, *featDes));
 
+	ctrl->addTask(*accTask);
+	accTask->activateAsObjective();
+	accTask->setStiffness(0.05);
+	accTask->setDamping(0.02);
 }
 
 void KukaMingXingControllerRTNET::updateHook(){
@@ -18,7 +34,7 @@ void KukaMingXingControllerRTNET::updateHook(){
        std::vector<double> JState(LWRDOF);
        std::vector<double> JVel(LWRDOF);
        RTT::FlowStatus joint_state_fs = iport_msr_joint_pos.read(JState);
-       RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel)
+       RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel);
 
        if(joint_state_fs == RTT::NewData){
        }

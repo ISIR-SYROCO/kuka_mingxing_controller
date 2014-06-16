@@ -22,6 +22,7 @@ link_directories(
 orocos_library(ModelKukaFixed kukafixed.cpp)	
 orocos_component(KukaMingXingController kukaMingXingController-rtnetcomponent.cpp) # ...you may add multiple source files.
 target_link_libraries(ModelKukaFixed ${PC_MINGXINGCONTROLLER_LIBRARIES})
+target_link_libraries(KukaMingXingController ModelKukaFixed ${PC_MINGXINGCONTROLLER_LIBRARIES})
 #
 # You may add multiple orocos_component statements.
 

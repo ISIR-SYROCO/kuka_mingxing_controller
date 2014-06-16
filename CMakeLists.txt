@@ -5,7 +5,7 @@
 cmake_minimum_required(VERSION 2.6.3)
 
 set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_CXX_FLAGS "-fpermissive")
+
 
 #
 # This creates a standard cmake project. You may extend this file with
@@ -37,6 +37,7 @@ include( ${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake )
 
 # Rest of the configuration is in src/
 add_subdirectory( include )
+set(CMAKE_CXX_FLAGS "-fpermissive")
 add_subdirectory( src )
 
 #
