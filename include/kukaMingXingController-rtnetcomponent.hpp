@@ -13,10 +13,7 @@
 class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
         KukaMingXingControllerRTNET(std::string const& name);
-
-        RTT::InputPort<double> port_i;
-
-        RTT::OutputPort<double> port_o;
+	
 
         void updateHook();
 };

@@ -8,8 +8,7 @@
 #include <iostream>
 
 KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
-    this->addPort("port_i", port_i);
-    this->addPort("port_o", port_o);
+
 }
 
 void KukaMingXingControllerRTNET::updateHook(){
@@ -17,11 +16,19 @@ void KukaMingXingControllerRTNET::updateHook(){
    if(fri_frm_krl.intData[0] == 1){ //command mode
 
        std::vector<double> JState(LWRDOF);
-
-       RTT::FlowStatus joint_state_fs =iport_msr_joint_pos.read(JState);
+       std::vector<double> JVel(LWRDOF);
+       RTT::FlowStatus joint_state_fs = iport_msr_joint_pos.read(JState);
+       RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel)
 
        if(joint_state_fs == RTT::NewData){
        }
+
+       //Update Model
+       //Set task projector
+       //Update projector
+       //Compute tau
+       //Send tau
+
    }
 
 }
