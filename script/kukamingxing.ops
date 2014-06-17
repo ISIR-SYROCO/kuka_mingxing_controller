@@ -1,0 +1,42 @@
+//importation des librairies necessaires
+import("lwr_fri")
+import("kuka_mingxing_controller")
+
+require("print")
+
+//construstion des composants
+loadComponent("MingXingController","KukaMingXingController")
+loadComponent("lwr","lwr_fri::FRIRTNetComponent")
+
+setActivity("lwr",0, 99, ORO_SCHED_RT)
+
+lwr.control_mode=3
+lwr.local_port = 49938
+lwr.configure
+
+setActivity("MingXingController",0.001, 40, ORO_SCHED_RT)
+
+var ConnPolicy cp
+cp.type = DATA
+//cp.size = 10
+cp.lock_policy = LOCKED
+
+connect("lwr.msrJntPos","MingXingController.JntPos_i",cp)
+connect("RobotState.sortie","tfSub.inCartesianState",cp)
+connect("RobotState.sizeChain","tfSub.size",cp)
+
+
+connect("friExample.JointVelocities_o","lwr.desJntVel", cp)
+
+connect("lwr.RobotState","MingXingController.RobotState_i",cp)
+connect("lwr.events", "MingXingController.Events_i", cp)
+
+MingXingController.configure
+lwr.control_mode=3
+MingXingController.friReset
+
+lwr.start
+
+//MingXingController.setControlStrategy(2)
+
+//MingXingController.start
