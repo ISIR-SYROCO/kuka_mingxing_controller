@@ -13,7 +13,7 @@ setActivity("lwr",0, 99, ORO_SCHED_RT)
 lwr.local_port = 49938
 lwr.configure
 
-setActivity("MingXingController",0.005, 40, ORO_SCHED_RT)
+setActivity("MingXingController",0.001, 40, ORO_SCHED_RT)
 
 var ConnPolicy cp
 cp.type = DATA
