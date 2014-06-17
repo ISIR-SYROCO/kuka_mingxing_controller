@@ -8,12 +8,12 @@
 #include <iostream>
 
 KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
-	model = new kukafixed("kuka");
-	ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
-        FMS = new orc::FullModelState("torqueTask.FModelState", *model, orc::FullState::INTERNAL);
-        FTS = new orc::FullTargetState("torqueTask.FTargetState", *model, orc::FullState::INTERNAL);
-        feat = new orc::FullStateFeature("torqueTask", *FMS);
-        featDes = new orc::FullStateFeature("torqueTask.Des", *FTS);
+    model = new kukafixed("kuka");
+    ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
+    FMS = new orc::FullModelState("torqueTask.FModelState", *model, orc::FullState::INTERNAL);
+    FTS = new orc::FullTargetState("torqueTask.FTargetState", *model, orc::FullState::INTERNAL);
+    feat = new orc::FullStateFeature("torqueTask", *FMS);
+    featDes = new orc::FullStateFeature("torqueTask.Des", *FTS);
 	
 	Eigen::VectorXd qdes_task1(7);
 	qdes_task1<<0.25,0.25,0.25,0.25,0.25,0.25,0.25;
@@ -25,6 +25,17 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 	accTask->activateAsObjective();
 	accTask->setStiffness(0.05);
 	accTask->setDamping(0.02);
+
+    ctrl->setActiveTaskVector();
+
+    // SET TASK PRIORITIES, COMPUTE TASK PROJECTORS
+    int nt = ctrl->getNbActiveTask();
+
+    param_priority.resize(nt,nt);
+    param_priority<<1;
+    ctrl->setTaskProjectors(param_priority);
+
+    ctrl->setGSHCConstraint();
 }
 
 void KukaMingXingControllerRTNET::updateHook(){
@@ -37,9 +48,16 @@ void KukaMingXingControllerRTNET::updateHook(){
        RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel);
 
        if(joint_state_fs == RTT::NewData){
+           Eigen::VectorXd joint_pos(JState.data());
+       }
+       if(joint_vel_fs == RTT::NewData){
+           Eigen::VectorXd joint_vel(JVel.data());
        }
 
        //Update Model
+       model->setJointPositions(joint_pos);
+       model->setJointVelocities(joint_vel);
+
        //Set task projector
        //Update projector
        //Compute tau

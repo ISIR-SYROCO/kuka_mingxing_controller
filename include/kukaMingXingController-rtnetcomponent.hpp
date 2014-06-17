@@ -22,17 +22,18 @@
 class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
         KukaMingXingControllerRTNET(std::string const& name);
-	kukafixed* model;
-	orcisir::OneLevelSolverWithQuadProg solver;
-	orcisir::GHCJTController* ctrl;
+        kukafixed* model;
+        orcisir::OneLevelSolverWithQuadProg solver;
+        orcisir::GHCJTController* ctrl;
         orc::FullModelState* FMS;
         orc::FullTargetState* FTS;
         orc::FullStateFeature* feat;
         orc::FullStateFeature* featDes;
-	orcisir::GHCJTTask* accTask;
+        orcisir::GHCJTTask* accTask;
 
-	Eigen::VectorXd qdes_task1;
+        Eigen::VectorXd qdes_task1;
 
+        MatrixXd param_priority;
 
         void updateHook();
 };
