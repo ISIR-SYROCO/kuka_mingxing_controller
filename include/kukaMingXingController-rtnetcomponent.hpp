@@ -32,10 +32,14 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         orcisir::GHCJTTask* accTask;
 
         Eigen::VectorXd qdes_task1;
+        Eigen::VectorXd tau;
+        std::vector<double> joint_position_command;
 
-        MatrixXd param_priority;
+        Eigen::MatrixXd param_priority;
 
         void updateHook();
+        void setParamPriority(std::vector<double> &param);
+        void setQdesTask1(std::vector<double> &qdes);
 };
 
 #endif

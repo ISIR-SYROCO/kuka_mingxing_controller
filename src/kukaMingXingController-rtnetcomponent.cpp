@@ -14,17 +14,21 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     FTS = new orc::FullTargetState("torqueTask.FTargetState", *model, orc::FullState::INTERNAL);
     feat = new orc::FullStateFeature("torqueTask", *FMS);
     featDes = new orc::FullStateFeature("torqueTask.Des", *FTS);
-	
-	Eigen::VectorXd qdes_task1(7);
-	qdes_task1<<0.25,0.25,0.25,0.25,0.25,0.25,0.25;
-	FTS->set_q(qdes_task1);
-	
-	accTask = &(ctrl->createGHCJTTask("accTask", *feat, *featDes));
 
-	ctrl->addTask(*accTask);
-	accTask->activateAsObjective();
-	accTask->setStiffness(0.05);
-	accTask->setDamping(0.02);
+	joint_position_command.assign(LWRDOF, 0.0);
+
+    qdes_task1.resize(7);
+    qdes_task1<<0.25,0.25,0.25,0.25,0.25,0.25,0.25;
+    tau.resize(7);
+    tau.setConstant(0);
+    FTS->set_q(qdes_task1);
+	
+    accTask = &(ctrl->createGHCJTTask("accTask", *feat, *featDes));
+
+    ctrl->addTask(*accTask);
+    accTask->activateAsObjective();
+    accTask->setStiffness(0.05);
+    accTask->setDamping(0.02);
 
     ctrl->setActiveTaskVector();
 
@@ -32,41 +36,90 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     int nt = ctrl->getNbActiveTask();
 
     param_priority.resize(nt,nt);
-    param_priority<<1;
+    param_priority<<0;
     ctrl->setTaskProjectors(param_priority);
 
-    ctrl->setGSHCConstraint();
+    //ctrl->setGSHCConstraint();
 }
 
 void KukaMingXingControllerRTNET::updateHook(){
-   fri_frm_krl = m_fromFRI.get(); 
-   if(fri_frm_krl.intData[0] == 1){ //command mode
 
-       std::vector<double> JState(LWRDOF);
-       std::vector<double> JVel(LWRDOF);
-       RTT::FlowStatus joint_state_fs = iport_msr_joint_pos.read(JState);
-       RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel);
+    std::string fri_mode("e_fri_unkown_mode");
+    bool fri_cmd_mode = false;
+    RTT::FlowStatus fs_event = iport_events.read(fri_mode);
+    if (fri_mode == "e_fri_cmd_mode")
+        fri_cmd_mode = true;
+    else if (fri_mode == "e_fri_mon_mode")
+        fri_cmd_mode = false;
+        
+    std::vector<double> JState(LWRDOF);
+    std::vector<double> JVel(LWRDOF);
+    RTT::FlowStatus joint_state_fs = iport_msr_joint_pos.read(JState);
+    RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel);
 
-       if(joint_state_fs == RTT::NewData){
-           Eigen::VectorXd joint_pos(JState.data());
-       }
-       if(joint_vel_fs == RTT::NewData){
-           Eigen::VectorXd joint_vel(JVel.data());
-       }
+    if(joint_state_fs == RTT::NewData){        
+        Eigen::VectorXd joint_pos(7);
+        
+        for(unsigned int i = 0; i < LWRDOF; i++){
+            joint_pos[i] = JState[i];
+            joint_position_command[i] = JState[i];
+        }
+        
+        model->setJointPositions(joint_pos);
+    }
+    
+    if(joint_vel_fs == RTT::NewData){
+        Eigen::VectorXd joint_vel(7);
+        for(unsigned int i = 0; i < LWRDOF; i++){
+            joint_vel[i] = JVel[i];
+        }
+        model->setJointVelocities(joint_vel);
+    }
 
-       //Update Model
-       model->setJointPositions(joint_pos);
-       model->setJointVelocities(joint_vel);
-
-       //Set task projector
-       //Update projector
-       //Compute tau
-       //Send tau
-
-   }
-
+    //Set task projector
+    ctrl->setTaskProjectors(param_priority);
+    //Update projector
+    ctrl->doUpdateProjector();
+    //Compute tau
+    ctrl->computeOutput(tau); 
+    //Send tau
+    if (fri_cmd_mode){
+        if(requiresControlMode(30)){
+            std::vector<double> joint_eff_command;
+            joint_eff_command.assign(LWRDOF, 0.0);
+            for(unsigned int i=0; i<LWRDOF; ++i){
+                joint_eff_command[i] = tau[i];
+            }
+            oport_add_joint_trq.write(joint_eff_command);
+        }
+        oport_joint_position.write(joint_position_command);
+    }
 }
 
+void KukaMingXingControllerRTNET::setParamPriority(std::vector<double> &param){
+    int nt = ctrl->getNbActiveTask();
+    if(param.size() != nt*nt){
+        std::cout << "Incorrect size" << std::endl;
+        return;
+    }    
+    else{
+        //Row Major
+        for(int i=0; i<nt; ++i){
+            for(int j=0; j<nt; ++j){
+                param_priority(i,j) = param[i*nt+j];
+            }
+        }
+        ctrl->setTaskProjectors(param_priority);
+        ctrl->doUpdateProjector();
+    }    
+}
+
+void KukaMingXingControllerRTNET::setQdesTask1(std::vector<double> &qdes){
+    for(unsigned int i = 0; i < LWRDOF; i++){
+        qdes_task1[i] = qdes[i];
+    }
+    FTS->set_q(qdes_task1);
+}
 
 /*
  * Using this macro, only one component may live
