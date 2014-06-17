@@ -40,6 +40,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         void updateHook();
         void setParamPriority(std::vector<double> &param);
         void setQdesTask1(std::vector<double> &qdes);
+	void setStiffnessTask1(double &stiffness);
+	void setDampingTask1(double &damping);
 };
 
 #endif

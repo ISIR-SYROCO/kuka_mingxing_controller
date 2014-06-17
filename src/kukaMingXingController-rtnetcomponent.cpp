@@ -8,6 +8,10 @@
 #include <iostream>
 
 KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
+    this->addOperation("setQ1des", &KukaMingXingControllerRTNET::setQdesTask1, this, RTT::OwnThread);
+    this->addOperation("setParamPriority", &KukaMingXingControllerRTNET::setParamPriority, this, RTT::OwnThread);
+    this->addOperation("setT1Stiffness", &KukaMingXingControllerRTNET::setStiffnessTask1, this, RTT::OwnThread);
+    this->addOperation("setT1Damping", &KukaMingXingControllerRTNET::setDampingTask1, this, RTT::OwnThread);
     model = new kukafixed("kuka");
     ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
     FMS = new orc::FullModelState("torqueTask.FModelState", *model, orc::FullState::INTERNAL);
@@ -18,7 +22,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 	joint_position_command.assign(LWRDOF, 0.0);
 
     qdes_task1.resize(7);
-    qdes_task1<<0.25,0.25,0.25,0.25,0.25,0.25,0.25;
+    qdes_task1<<0.0,-0.05,0.0,1.5,0.0,-1.2,0.0;
     tau.resize(7);
     tau.setConstant(0);
     FTS->set_q(qdes_task1);
@@ -27,8 +31,8 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 
     ctrl->addTask(*accTask);
     accTask->activateAsObjective();
-    accTask->setStiffness(0.05);
-    accTask->setDamping(0.02);
+    accTask->setStiffness(0.001);
+    accTask->setDamping(0.000);
 
     ctrl->setActiveTaskVector();
 
@@ -66,6 +70,7 @@ void KukaMingXingControllerRTNET::updateHook(){
         }
         
         model->setJointPositions(joint_pos);
+	//std::cout << "Jpos " << joint_pos.transpose() << std::endl;
     }
     
     if(joint_vel_fs == RTT::NewData){
@@ -82,6 +87,7 @@ void KukaMingXingControllerRTNET::updateHook(){
     ctrl->doUpdateProjector();
     //Compute tau
     ctrl->computeOutput(tau); 
+    //std::cout << tau.transpose() << std::endl;
     //Send tau
     if (fri_cmd_mode){
         if(requiresControlMode(30)){
@@ -120,6 +126,15 @@ void KukaMingXingControllerRTNET::setQdesTask1(std::vector<double> &qdes){
     }
     FTS->set_q(qdes_task1);
 }
+
+void KukaMingXingControllerRTNET::setStiffnessTask1(double &stiffness){
+    accTask->setStiffness(stiffness);
+}
+
+void KukaMingXingControllerRTNET::setDampingTask1(double &damping){
+    accTask->setDamping(damping);
+}
+
 
 /*
  * Using this macro, only one component may live
