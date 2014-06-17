@@ -5,38 +5,38 @@ import("kuka_mingxing_controller")
 require("print")
 
 //construstion des composants
-loadComponent("MingXingController","KukaMingXingController")
+loadComponent("MingXingController","KukaMingXingControllerRTNET")
 loadComponent("lwr","lwr_fri::FRIRTNetComponent")
 
 setActivity("lwr",0, 99, ORO_SCHED_RT)
 
-lwr.control_mode=3
 lwr.local_port = 49938
 lwr.configure
 
-setActivity("MingXingController",0.001, 40, ORO_SCHED_RT)
+setActivity("MingXingController",0.005, 40, ORO_SCHED_RT)
 
 var ConnPolicy cp
 cp.type = DATA
 //cp.size = 10
 cp.lock_policy = LOCKED
 
-connect("lwr.msrJntPos","MingXingController.JntPos_i",cp)
-connect("RobotState.sortie","tfSub.inCartesianState",cp)
-connect("RobotState.sizeChain","tfSub.size",cp)
+connectPeers("lwr","MingXingController")
+MingXingController.setPeer("lwr")
 
-
-connect("friExample.JointVelocities_o","lwr.desJntVel", cp)
+connect("lwr.msrJntPos","MingXingController.MsrJntPos_i",cp)
+connect("lwr.msrJntVel", "MingXingController.msrJntVel_i",cp)
+connect("MingXingController.JointPositions_o","lwr.desJntPos",cp)
+connect("MingXingController.JointTorques_o","lwr.desAddJntTrq",cp)
 
 connect("lwr.RobotState","MingXingController.RobotState_i",cp)
 connect("lwr.events", "MingXingController.Events_i", cp)
 
 MingXingController.configure
-lwr.control_mode=3
+lwr.control_mode=7
 MingXingController.friReset
 
 lwr.start
 
-//MingXingController.setControlStrategy(2)
+//MingXingController.setControlStrategy(7)
 
 //MingXingController.start
