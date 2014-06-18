@@ -14,7 +14,10 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     this->addOperation("setDamping", &KukaMingXingControllerRTNET::setDampingTask, this, RTT::OwnThread);
     this->addOperation("setEEdes", &KukaMingXingControllerRTNET::setEEdesTask2, this, RTT::OwnThread);
     
+    tau_max.resize(7);
+    tau_max<<200,200,100,100,100,30,30;
 
+    
     eq.resize(LWRDOF);
     deq.resize(LWRDOF);
 
@@ -171,6 +174,12 @@ void KukaMingXingControllerRTNET::updateHook(){
 
     tau = proj.transpose()*accTask->getJacobian().transpose() * f1
           + proj2.transpose()*Jac.transpose() * f2;//accTask2->getJacobian()=mesured jacobian
+          
+    for(int i = 0; i < tau.size(); ++i)
+    {
+      if(tau(i) > tau_max(i)) tau(i) = tau_max(i);
+      else if(tau(i) < -tau_max(i)) tau(i) = -tau_max(i);
+    }
     
     //std::cout << tau.transpose() << std::endl;
     //Send tau

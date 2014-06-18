@@ -53,6 +53,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         Eigen::VectorXd eq,deq;
         
         Eigen::VectorXd tau;
+        Eigen::VectorXd tau_max;
         std::vector<double> joint_position_command;
 
         Eigen::MatrixXd param_priority;
