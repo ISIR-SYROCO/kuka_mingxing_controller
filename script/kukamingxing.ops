@@ -27,6 +27,8 @@ connect("lwr.msrJntPos","MingXingController.MsrJntPos_i",cp)
 connect("lwr.msrJntVel", "MingXingController.msrJntVel_i",cp)
 connect("MingXingController.JointPositions_o","lwr.desJntPos",cp)
 connect("MingXingController.JointTorques_o","lwr.desAddJntTrq",cp)
+connect("lwr.msrCartPos", "MingXingController.MsrCartPos_i", cp)
+connect("lwr.Jacobian", "MingXingController.Jacobian_i", cp)
 
 connect("lwr.RobotState","MingXingController.RobotState_i",cp)
 connect("lwr.events", "MingXingController.Events_i", cp)
@@ -36,6 +38,12 @@ lwr.control_mode=7
 MingXingController.friReset
 
 lwr.start
+
+var param_priority1
+param_priority1 = array(0,1,0,0)
+
+var param_priority2
+param_priority2 = array(0,0,1,0)
 
 //MingXingController.setControlStrategy(7)
 

@@ -10,8 +10,10 @@
 KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name) : FriRTNetExampleAbstract(name){
     this->addOperation("setQ1des", &KukaMingXingControllerRTNET::setQdesTask1, this, RTT::OwnThread);
     this->addOperation("setParamPriority", &KukaMingXingControllerRTNET::setParamPriority, this, RTT::OwnThread);
-    this->addOperation("setT1Stiffness", &KukaMingXingControllerRTNET::setStiffnessTask1, this, RTT::OwnThread);
-    this->addOperation("setT1Damping", &KukaMingXingControllerRTNET::setDampingTask1, this, RTT::OwnThread);
+    this->addOperation("setStiffness", &KukaMingXingControllerRTNET::setStiffnessTask, this, RTT::OwnThread);
+    this->addOperation("setDamping", &KukaMingXingControllerRTNET::setDampingTask, this, RTT::OwnThread);
+    this->addOperation("setEEdes", &KukaMingXingControllerRTNET::setEEdesTask2, this, RTT::OwnThread);
+    
 
     eq.resize(LWRDOF);
     deq.resize(LWRDOF);
@@ -38,6 +40,10 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     TF = new orc::TargetFrame("frame.TFrame", *model);
     feat2 = new orc::PositionFeature("frame", *SF, orc::XYZ);
     featDes2 = new orc::PositionFeature("frame.Des", *TF, orc::XYZ);
+    posdes_task2 = Eigen::Displacementd(0.3,0.0,0.5);
+    TF->setPosition(posdes_task2);//0.3,0.0,0.5
+    TF->setVelocity(Eigen::Twistd());
+    TF->setAcceleration(Eigen::Twistd());
 
     accTask2 = &(ctrl->createGHCJTTask("accTask2", *feat2, *featDes2));
     
@@ -259,13 +265,19 @@ void KukaMingXingControllerRTNET::setQdesTask1(std::vector<double> &qdes){
     }
     FTS->set_q(qdes_task1);
 }
-
-void KukaMingXingControllerRTNET::setStiffnessTask1(double &stiffness){
-    accTask->setStiffness(stiffness);
+void KukaMingXingControllerRTNET::setEEdesTask2(std::vector<double> &eedes){
+    posdes_task2 = Eigen::Displacementd(eedes[0], eedes[1], eedes[2]);
+    TF->setPosition(posdes_task2);
 }
 
-void KukaMingXingControllerRTNET::setDampingTask1(double &damping){
-    accTask->setDamping(damping);
+void KukaMingXingControllerRTNET::setStiffnessTask(double &stiffness1, double &stiffness2){
+    accTask->setStiffness(stiffness1);
+    accTask2->setStiffness(stiffness2);
+}
+
+void KukaMingXingControllerRTNET::setDampingTask(double &damping1, double &damping2){
+    accTask->setDamping(damping1);
+    accTask2->setDamping(damping2);
 }
 
 
