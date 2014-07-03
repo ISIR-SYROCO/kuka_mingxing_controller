@@ -27,6 +27,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         kukafixed* model;
         orcisir::OneLevelSolverWithQuadProg solver;
         orcisir::GHCJTController* ctrl;
+	int counter;
+        int controlMode;
         //Task1
         orc::FullModelState* FMS;
         orc::FullTargetState* FTS;
@@ -35,6 +37,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         orcisir::GHCJTTask* accTask;
         
         Eigen::VectorXd qdes_task1;
+        
+        Eigen::MatrixXd proj;
         
         //Task2
         orc::SegmentFrame* SF;
@@ -45,12 +49,43 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         
         Eigen::Displacementd posdes_task2;
         Eigen::Twistd veldes_task2;
+        int interpCounter;
+        double EExinit;
+	double EEyinit;
+	double EEzinit;
+        bool initPosSet;
+        bool interpolation;
+        bool lemniscate;
         
+        Eigen::MatrixXd proj2;
             
-        Eigen::Vector3d error,errDot,errorDot;
+        //Task3
+        orc::SegmentFrame* SF3;
+        orc::TargetFrame* TF3;
+        orc::PositionFeature* feat3;
+        orc::PositionFeature* featDes3;
+        orcisir::GHCJTTask* accTask3;
+        
+        Eigen::Displacementd posdes_task3;
+        Eigen::Twistd veldes_task3;
+        int interpCounterEl;
+        double Elxinit;
+	double Elyinit;
+	double Elzinit;
+        bool initPosSetEl;
+        bool interpolationEl;
+	Eigen::Vector3d lemniCenter;
+	double lemniLenY, lemniLenZ, lemniFreq;
+
+        
+        Eigen::MatrixXd proj3;
+
+        Eigen::Vector3d error,errDot,errorDot,errorInt;
+        Eigen::Vector3d error3,errDot3,errorDot3,errorInt3;
         Eigen::Displacementd::Rotation3D Rdes_in_r;
         Eigen::Matrix3d spaceTransform;
-        Eigen::VectorXd eq,deq;
+        Eigen::VectorXd eq,deq,eqInt;
+	double ki1,ki2,ki3;
         
         Eigen::VectorXd tau;
         Eigen::VectorXd tau_max;
@@ -61,16 +96,34 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         KDL::Jacobian J;
       	geometry_msgs::Pose X;
 
+	//plot data
+	Eigen::VectorXd errEE,errEl,errQ,vecT;
+	Eigen::VectorXd eex,eey,eez,eerefx,eerefy,eerefz;
+	bool doPlot;
+
         void updateHook();
         
         void computeProjector(const Eigen::MatrixXd &C, const Eigen::MatrixXd &J, Eigen::MatrixXd& projector);
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> sortRows(const Eigen::MatrixXd &C, const Eigen::MatrixXd &J);
+	
+	void getPoseEE();
+	void getErrorEE();
+	void getErrorEl();
+	void getErrorQ();
+	void getTau();
+	void getQ();
         
         void setParamPriority(std::vector<double> &param);
         void setQdesTask1(std::vector<double> &qdes);
+	void setLemniscate(std::vector<double> &center, double lenY, double lenZ, double freq);
         void setEEdesTask2(std::vector<double> &eedes);
-	void setStiffnessTask(double &stiffness1, double &stiffness2);
-	void setDampingTask(double &damping1, double &damping2);
+        void setEldesTask3(std::vector<double> &eldes);
+	void setStiffnessTask(double stiffness1, double stiffness2, double stiffness3);
+	void setDampingTask(double damping1, double damping2, double damping3);
+  	void setIntegratorTask(double integrator1, double integrator2, double integrator3);
+	void setControlMode(int mode);
+        void useInterpolation(bool interp);
+	void useLemniscate(bool lemni);
 };
 
 #endif

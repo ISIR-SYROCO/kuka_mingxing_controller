@@ -227,18 +227,31 @@ public:
         //================== Register all Joint for the kinematic structure ==================//
         segJoints[0].push_back( new RevoluteJoint(0, 1, 0, 0, Eigen::Displacementd(0.0,0.0,0.0,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[1].push_back( new RevoluteJoint(1, 2, 1, 1, Eigen::Displacementd(0.0,0.0,0.0,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,1,0)) );
+        segJoints[1].push_back( new RevoluteJoint(1, 2, 1, 1, Eigen::Displacementd(0.0,0.0,0.3105,0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[2].push_back( new RevoluteJoint(2, 3, 2, 2, Eigen::Displacementd(0.0,0.0,0.4,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+        segJoints[2].push_back( new RevoluteJoint(2, 3, 2, 2, Eigen::Displacementd(0.0,0.2,0.0,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[3].push_back( new RevoluteJoint(3, 4, 3, 3, Eigen::Displacementd(0.0,0.0,0.0,0.0,0.0,-0,-1.0), Eigen::Vector3d(0,1,0)) );
+        segJoints[3].push_back( new RevoluteJoint(3, 4, 3, 3, Eigen::Displacementd(0.0,0.0,0.2,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[4].push_back( new RevoluteJoint(4, 5, 4, 4, Eigen::Displacementd(0.0,0.0,0.39,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+        segJoints[4].push_back( new RevoluteJoint(4, 5, 4, 4, Eigen::Displacementd(0.0,-0.195, 0.0, 0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[5].push_back( new RevoluteJoint(5, 6, 5, 5, Eigen::Displacementd(0.0,0.0,0.0,0.707106781187,0.0,0.0,0.707106781187), Eigen::Vector3d(1,0,0)) );
+        segJoints[5].push_back( new RevoluteJoint(5, 6, 5, 5, Eigen::Displacementd(0.0,0.06,0.195,0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
-        segJoints[6].push_back( new RevoluteJoint(6, 7, 6, 6, Eigen::Displacementd(0.0,0.0,0.0,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+        segJoints[6].push_back( new RevoluteJoint(6, 7, 6, 6, Eigen::Displacementd(0.0,0.078,0.06,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
+//        segJoints[0].push_back( new RevoluteJoint(0, 1, 0, 0, Eigen::Displacementd(0.0,0.0,0.0,1.0,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+//        segJoints[1].push_back( new RevoluteJoint(1, 2, 1, 1, Eigen::Displacementd(0.0,0.0,0.3105,0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+//        segJoints[2].push_back( new RevoluteJoint(2, 3, 2, 2, Eigen::Displacementd(0.0,0.2,0.0,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+//        segJoints[3].push_back( new RevoluteJoint(3, 4, 3, 3, Eigen::Displacementd(0.0,0.0,0.2,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+//        segJoints[4].push_back( new RevoluteJoint(4, 5, 4, 4, Eigen::Displacementd(0.0,-0.195,0.707106781187,0.707106781187,0.0,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+//        segJoints[5].push_back( new RevoluteJoint(5, 6, 5, 5, Eigen::Displacementd(0.0,0.06,0.195,0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
+
+ //       segJoints[6].push_back( new RevoluteJoint(6, 7, 6, 6, Eigen::Displacementd(0.0,0.078,0.06,-0.707106781187,0.707106781187,0.0,0.0), Eigen::Vector3d(0,0,1)) );
 
         Jroot.setZero();
         dJroot.setZero();
