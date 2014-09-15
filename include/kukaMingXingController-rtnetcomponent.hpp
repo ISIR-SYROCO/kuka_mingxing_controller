@@ -8,9 +8,11 @@
 #define KUKA_MODEL_FROM_FRI_RTNET_COMPONENT_HPP
 
 #include <friRTNetExampleAbstract.hpp>
-#include "kukafixed.h"
+
 #include <orcisir/GHCJTController.h>
 #include <orcisir/Solvers/OneLevelSolver.h>
+#include "kukafixed.h"
+#include <kukakdl/kukakdl.hpp>
 
 #include <orc/control/Feature.h>
 #include <orc/control/FullState.h>
@@ -24,7 +26,8 @@
 class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
         KukaMingXingControllerRTNET(std::string const& name);
-        kukafixed* model;
+		kukafixed* model;
+        KukaKDL modelKDL;
         orcisir::OneLevelSolverWithQuadProg solver;
         orcisir::GHCJTController* ctrl;
 	int counter;

@@ -52,7 +52,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     ki2 = 0.0;
     ki3 = 0.0;
 
-    model = new kukafixed("kuka");
+	model = new kukafixed("kuka");
     ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
     counter = 0;
     interpCounter = 0;
@@ -84,7 +84,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     lemniLenY = 0.8;
     lemniLenZ = 0.6;
     lemniFreq = 1.0;
-    SF = new orc::SegmentFrame("frame.SFrame", *model, "kuka.07", Eigen::Displacementd(0.0,0.0,0.06));
+    SF = new orc::SegmentFrame("frame.SFrame", *model, "kuka.07", Eigen::Displacementd(0.0,0.0,0.0));
     TF = new orc::TargetFrame("frame.TFrame", *model);
     feat2 = new orc::PositionFeature("frame", *SF, orc::XYZ);
     featDes2 = new orc::PositionFeature("frame.Des", *TF, orc::XYZ);
@@ -155,7 +155,7 @@ void KukaMingXingControllerRTNET::updateHook(){
     RTT::FlowStatus joint_vel_fs = iport_msr_joint_vel.read(JVel);
     RTT::FlowStatus joint_trq_fs = iport_msr_joint_trq.read(JTrq);
 
-    Eigen::VectorXd joint_pos(LWRDOF);
+	Eigen::VectorXd joint_pos(LWRDOF);
     Eigen::VectorXd joint_vel(LWRDOF);
     Eigen::VectorXd joint_trq(LWRDOF);
     Eigen::MatrixXd Jac = Eigen::MatrixXd::Zero(3,LWRDOF);
@@ -166,10 +166,11 @@ void KukaMingXingControllerRTNET::updateHook(){
         
         
         for(unsigned int i = 0; i < LWRDOF; i++){
-            joint_pos[i] = JState[i];
-            joint_position_command[i] = JState[i];
+			joint_pos[i] = JState[i];           
+			joint_position_command[i] = JState[i];
         }
-        model->setJointPositions(joint_pos);
+		model->setJointPositions(joint_pos);
+        modelKDL.setJointPosition(JState);
 	if (counter==0)
 	    FTS->set_q(joint_pos);
 	//std::cout << "Jpos " << joint_pos.transpose() << std::endl;
@@ -225,9 +226,9 @@ void KukaMingXingControllerRTNET::updateHook(){
 
     }
   
-
-    Jac = accTask2->getJacobian();
-    Jac3 = accTask3->getJacobian();
+    modelKDL.computeJacobian();
+    Jac = modelKDL.jacobian.data.block(0,0, 3,7);// accTask2->getJacobian();
+    //Jac3 = accTask3->getJacobian();
 
     //std::cout<<"Jac3="<<Jac3<<std::endl;
     /*Eigen::MatrixXd JacP = Eigen::MatrixXd::Zero(3,LWRDOF);

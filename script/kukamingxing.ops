@@ -24,7 +24,7 @@ connectPeers("lwr","MingXingController")
 MingXingController.setPeer("lwr")
 
 connect("lwr.msrJntPos","MingXingController.MsrJntPos_i",cp)
-connect("lwr.msrJntVel", "MingXingController.msrJntVel_i",cp)
+connect("lwr.msrJntVel", "MingXingController.MsrJntVel_i",cp)
 connect("lwr.msrJntTrq", "MingXingController.MsrJntTrq_i",cp)
 connect("MingXingController.JointPositions_o","lwr.desJntPos",cp)
 connect("MingXingController.JointTorques_o","lwr.desAddJntTrq",cp)
@@ -47,7 +47,7 @@ var array param_priority2
 param_priority2 = array(0.0,0.0,1.0,0.0)
 
 var array posedes
-posedes = array(0.1, 0.4, 0.6)
+posedes = array(0.4, 0.1, 0.65)
 
 var array lemniCenter
 //lemniCenter = array(0.56,0.0, 0.66)
@@ -60,7 +60,7 @@ var array qdes
 qdes = array(-0.5, 0.05, 0.0, 1.5, 0.0, -1.0, 0.0)//0.0, -0.05, 0.0, 1.5, 0.0, -1.0, 0.0
 
 MingXingController.setQ1des(qdes)
-//MingXingController.setEEdes(posedes)
+MingXingController.setEEdes(posedes)
 MingXingController.setEldes(posedes3)
 //MingXingController.setLemniscate(lemniCenter, 0.15,0.1,0.5)//0.2,0.1,1.0 for error, 0.5,0.4,1.0 for video
 MingXingController.setLemniscate(lemniCenter, 0.15,0.1,1.0)//0.2,0.1,1.0 for error, 0.5,0.4,1.0 for video
@@ -71,7 +71,7 @@ MingXingController.setDamping(0.01, 12.0,12.0)
 MingXingController.setIntegrator(0.00, 0.0,0.0)
 
 //MingXingController.setParamPriority(param_priority2)
-MingXingController.setMode(2)//0:posture, 1:ee, 2 GHC
+MingXingController.setMode(1)//0:posture, 1:ee, 2 GHC
 
 MingXingController.useLemniscate(true)
 
