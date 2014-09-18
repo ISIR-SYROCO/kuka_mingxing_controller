@@ -22,6 +22,7 @@
 #include <orcisir/OrthonormalFamily.h>
 
 #include <Eigen/Dense>
+#include <fstream>
 
 class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
@@ -103,6 +104,10 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 	Eigen::VectorXd errEE,errEl,errQ,vecT;
 	Eigen::VectorXd eex,eey,eez,eerefx,eerefy,eerefz;
 	bool doPlot;
+	std::ofstream myfile;
+	//myfile.open ("kukadata.txt", std::ofstream::app);
+	std::ofstream myfile2;
+	//myfile2.open ("kuka_task_error.txt", std::ofstream::app);	
 
         void updateHook();
         

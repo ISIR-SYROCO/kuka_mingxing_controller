@@ -37,6 +37,8 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     eerefy.resize(60000);
     eerefz.resize(60000);
     doPlot = true;
+	myfile2.open ("kuka_task_error.txt");	
+	myfile.open ("kukadata.txt");
   
     tau_max.resize(7);
     tau_max<<200,200,100,100,100,30,30;
@@ -250,13 +252,13 @@ void KukaMingXingControllerRTNET::updateHook(){
     double zeroToOne = 0.0;
     if (controlMode==2)
     {
-	if (counter==0)
-	{
+		if (counter==0)
+		{
             param_priority<<0, 0, 0, 
 		    	    1, 0, 1,
 		    	    1, 0, 0;//pos>el>ee
 	    std::cout <<"s1=pos>el>ee"<<std::endl;
-	}
+		}
 
         else if (counter==250)
         {
@@ -271,22 +273,22 @@ void KukaMingXingControllerRTNET::updateHook(){
 //	    initPosSetEl = false;
 //	    interpCounterEl = 0;
 	    std::cout <<"s2=ee>el>pos"<<std::endl;
-	}
-	  else if ((counter > 250) && (counter <= (250+int(switch_duration))))
+		}
+	  	else if ((counter > 250) && (counter <= (250+int(switch_duration))))
 	    {
  	        coe = counter - 250;
-                oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
+            oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(1,0) = oneToZero;
 	        param_priority(1,2) = oneToZero;
-  		param_priority(2,0) = oneToZero;
+  			param_priority(2,0) = oneToZero;
 	        param_priority(0,1) = zeroToOne;
 	        param_priority(0,2) = zeroToOne;
 	        param_priority(2,1) = zeroToOne;
 	    }
         else if (counter==900)
-	{
-	    getErrorEE();
+		{
+	    	getErrorEE();
 	    getErrorEl();
 	    getErrorQ();
             /*param_priority<<0, 1, 1, 
@@ -375,7 +377,7 @@ void KukaMingXingControllerRTNET::updateHook(){
         Elzinit = SF3->getPosition().getTranslation()[2];
         initPosSetEl = true;
     }
-    if (controlMode==2&&lemniscate)
+    if (controlMode==1&&lemniscate)
     {
         
         double time = dt*counter;
@@ -419,7 +421,7 @@ void KukaMingXingControllerRTNET::updateHook(){
     error3 = TF3->getPosition().getTranslation() - SF3->getPosition().getTranslation();
     Eigen::Vector3d linearVel3 = Jac3*joint_vel;
     errorDot3 = -linearVel3;
-    errorInt3 += error3*dt;
+    errorInt3 = 0.8*errorInt3 + error3*dt;
 
     const Eigen::VectorXd f1 = accTask->getStiffness() * eq
                                + accTask->getDamping() * deq
@@ -483,7 +485,7 @@ void KukaMingXingControllerRTNET::updateHook(){
     else if (controlMode==1)
     {
 	tau = Jac.transpose() * f2;
-//	std::cout << "errorEE="<<(posdes_task2.getTranslation() - posEndEffMes.getTranslation()).transpose() << std::endl;
+	//std::cout << "errorEE="<<(posdes_task2.getTranslation() - posEndEffMes.getTranslation()).transpose() << std::endl;
     }
     else if (controlMode==2)
     {
@@ -502,7 +504,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 
       
 
-    //std::cout << "tau="<<tau.transpose() << std::endl;
+//    std::cout << "tau="<<tau.transpose() << " f2= "<< f2.transpose() << std::endl;
 
     //Send tau
     if (fri_cmd_mode){
@@ -520,13 +522,14 @@ void KukaMingXingControllerRTNET::updateHook(){
     //plot data
     if (doPlot)
     {
-	std::ofstream myfile;
-	myfile.open ("kukadata.txt");
-	std::ofstream myfile2;
-	myfile2.open ("kuka_task_error.txt");	
+
+
 	int start,end,endindex;
-	start = 2000;
-	end = 50000;
+	start = 1;
+	if (lemniscate)
+		end = 30000;
+	else
+		end = 10000;
 	endindex = end-start-1;
 	if (counter>=start &&counter <= end)
     	{
@@ -562,7 +565,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 		    myfile <<eerefz[i]<<" ";
 		myfile <<eerefz[endindex]<<"\n";
 	    }
-	    myfile.close();
+	    //myfile.close();
 	}
 	if (counter <= end)
     	{
@@ -578,21 +581,21 @@ void KukaMingXingControllerRTNET::updateHook(){
 		myfile2 <<errEE[endindex]<<"\n";	  
 
 
-		for (unsigned int i=0;i<endindex;++i)
+		/*for (unsigned int i=0;i<endindex;++i)
 		    myfile2 <<errEl[i]<<" ";
 		myfile2 <<errEl[endindex]<<"\n";	
 
 
 		for (unsigned int i=0;i<endindex;++i)
 		    myfile2 <<errQ[i]<<" ";
-		myfile2 <<errQ[endindex]<<"\n";	
+		myfile2 <<errQ[endindex]<<"\n";*/	
 
 
 		for (unsigned int i=0;i<endindex;++i)
 		    myfile2 <<vecT[i]<<" ";
 		myfile2 <<vecT[endindex]<<"\n";	      
 	    }
-	    myfile2.close();
+	    //myfile2.close();
 	}
 		/*std::cout<<"eex=[";
 		for (unsigned int i=0;i<1499;++i)
