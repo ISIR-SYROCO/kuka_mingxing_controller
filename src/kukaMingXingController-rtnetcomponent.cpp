@@ -18,10 +18,12 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     this->addOperation("setLemniscate", &KukaMingXingControllerRTNET::setLemniscate, this, RTT::OwnThread);
     this->addOperation("setEldes", &KukaMingXingControllerRTNET::setEldesTask3, this, RTT::OwnThread);
     this->addOperation("getPoseEE", &KukaMingXingControllerRTNET::getPoseEE, this, RTT::OwnThread);
+	this->addOperation("getPoseEl", &KukaMingXingControllerRTNET::getPoseEl, this, RTT::OwnThread);
     this->addOperation("getErrorEE", &KukaMingXingControllerRTNET::getErrorEE, this, RTT::OwnThread);
     this->addOperation("getTau", &KukaMingXingControllerRTNET::getTau, this, RTT::OwnThread);
     this->addOperation("getQ", &KukaMingXingControllerRTNET::getQ, this, RTT::OwnThread);
-    this->addOperation("useInterp", &KukaMingXingControllerRTNET::useInterpolation, this, RTT::OwnThread);
+    this->addOperation("useInterpEE", &KukaMingXingControllerRTNET::useInterpolationEE, this, RTT::OwnThread);
+	this->addOperation("useInterpEl", &KukaMingXingControllerRTNET::useInterpolationEl, this, RTT::OwnThread);
     this->addOperation("setMode", &KukaMingXingControllerRTNET::setControlMode, this, RTT::OwnThread);//0:posture, 1:ee, 2 GHC
     this->addOperation("useLemniscate", &KukaMingXingControllerRTNET::useLemniscate, this, RTT::OwnThread);
   
@@ -57,12 +59,12 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 	model = new kukafixed("kuka");
     ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
     counter = 0;
-    interpCounter = 0;
+    interpCounterEE = 0;
     interpCounterEl = 0;
     controlMode = 1;
     initPosSet = false;
     initPosSetEl = false;
-    interpolation = false;
+    interpolationEE = false;
     interpolationEl = false;
     lemniscate = false;
     
@@ -207,7 +209,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 //		Jac = JacFull.block(0,0, 3,7);
 //    }
     
-    Eigen::Displacementd posEndEffMes;
+    
     RTT::FlowStatus cartPos_fs =  iport_cart_pos.read(X);
     if(cartPos_fs==RTT::NewData){
         posEndEffMes.x()=(double)X.position.x;
@@ -227,10 +229,37 @@ void KukaMingXingControllerRTNET::updateHook(){
 	//std::cout<<"posEndEffMes="<<posEndEffMes.getTranslation().transpose()<<std::endl;
 
     }
+
+    /*Eigen::Displacementd poseeMes;
+    KDL::Frame f_ee = modelKDL.getSegmentPosition(8);
+    poseeMes.x()=f_ee.p.x();
+    poseeMes.y()=f_ee.p.y();
+    poseeMes.z()=f_ee.p.z();*/
+
+
+    
+    KDL::Frame f_elbow = modelKDL.getSegmentPosition(3);
+    posElbowMes.x()=f_elbow.p.x();
+    posElbowMes.y()=f_elbow.p.y();
+    posElbowMes.z()=f_elbow.p.z();
+    double el_x,el_y,el_z,el_w;
+	f_elbow.M.GetQuaternion (el_x, el_y, el_z, el_w); 
+    posElbowMes.qx()=el_x;
+    posElbowMes.qy()=el_y;
+    posElbowMes.qz()=el_z;
+    posElbowMes.qw()=el_w;
+	if (!initPosSetEl)
+    {
+        Elxinit = f_elbow.p.x();
+        Elyinit = f_elbow.p.y();
+        Elzinit = f_elbow.p.z();
+        initPosSetEl = true;
+    }
+
   
-    modelKDL.computeJacobian();
-    Jac = modelKDL.jacobian.data.block(0,0, 3,7);// accTask2->getJacobian();
-    //Jac3 = accTask3->getJacobian();
+    //modelKDL.computeJacobian();
+    Jac = modelKDL.getSegmentJacobian(8).data.block(0,0, 3,7);// accTask2->getJacobian();
+    Jac3 = modelKDL.getSegmentJacobian(3).data.block(0,0, 3,7); // accTask3->getJacobian();
 
     //std::cout<<"Jac3="<<Jac3<<std::endl;
     /*Eigen::MatrixXd JacP = Eigen::MatrixXd::Zero(3,LWRDOF);
@@ -250,7 +279,13 @@ void KukaMingXingControllerRTNET::updateHook(){
     double switch_duration = 100.0;
     double oneToZero = 0.0;
     double zeroToOne = 0.0;
-    if (controlMode==2)
+	if (controlMode==2)
+	{
+        param_priority<<0, 1, 1, 
+		    0, 0, 1,
+		    0, 0, 0;//el>ee>pos
+	}    
+	if (controlMode==3)
     {
 		if (counter==0)
 		{
@@ -286,7 +321,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	        param_priority(0,2) = zeroToOne;
 	        param_priority(2,1) = zeroToOne;
 	    }
-        else if (counter==900)
+        else if (counter==9000)
 		{
 	    	getErrorEE();
 	    getErrorEl();
@@ -299,16 +334,16 @@ void KukaMingXingControllerRTNET::updateHook(){
 //	    interpCounterEl = 0;
 	    std::cout <<"s3=el>ee>pos"<<std::endl;
 	}
-	  else if ((counter > 900) && (counter <= (900+int(switch_duration))))
+	  else if ((counter > 9000) && (counter <= (9000+int(switch_duration))))
 	    {
- 	        coe = counter - 900;
+ 	        coe = counter - 9000;
                 oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
 	        zeroToOne = 1.0 - oneToZero;
 
 	        param_priority(1,2) = zeroToOne;
 	        param_priority(2,1) = oneToZero;
 	    }
-        else if (counter==1600)
+        else if (counter==16000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -317,15 +352,15 @@ void KukaMingXingControllerRTNET::updateHook(){
 		    	    0, 0, 0,
 		    	    0, 0, 1;//ee>pos*/
             initPosSet = false;
-//            interpolation = true;
-//	    interpCounter = 0;
+//            interpolationEE = true;
+//	    interpCounterEE = 0;
 //	    initPosSetEl = false;
 //	    interpCounterEl = 0;
 	    std::cout <<"s4=ee>pos"<<std::endl;
 	}
-	  else if ((counter > 1600) && (counter <= (1600+int(switch_duration))))
+	  else if ((counter > 16000) && (counter <= (16000+int(switch_duration))))
 	    {
- 	        coe = counter - 1600;
+ 	        coe = counter - 16000;
                 oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(0,2) = oneToZero;
@@ -333,7 +368,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	        param_priority(2,2) = zeroToOne;
 
 	    }
-        else if (counter==2300)
+        else if (counter==23000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -346,9 +381,9 @@ void KukaMingXingControllerRTNET::updateHook(){
 //	    interpCounterEl = 0;
 	    std::cout <<"s5=ee>el>pos"<<std::endl;
 	}
-	  else if ((counter > 2300) && (counter <= (2300+int(switch_duration))))
+	  else if ((counter > 23000) && (counter <= (23000+int(switch_duration))))
 	    {
- 	        coe = counter - 2300;
+ 	        coe = counter - 23000;
                 oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(0,2) = zeroToOne;
@@ -356,7 +391,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	        param_priority(2,2) = oneToZero;
 
 	    }
-        else if (counter==3000)
+        else if (counter==30000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -385,9 +420,9 @@ void KukaMingXingControllerRTNET::updateHook(){
         TF->setPosition(posdes_task2);
     } 
 
-    if (interpCounter <= 100 && interpolation)
+    if (interpCounterEE <= 10 && interpolationEE)
     {
-        double coef2 = 0.01*interpCounter;
+        double coef2 = 0.1*interpCounterEE;
         double coef = 1.0 - coef2;
         double tx = posdes_task2.getTranslation()[0];
         double ty = posdes_task2.getTranslation()[1];
@@ -416,12 +451,12 @@ void KukaMingXingControllerRTNET::updateHook(){
     error = TF->getPosition().getTranslation() - posEndEffMes.getTranslation();
     Eigen::Vector3d linearVel = Jac*joint_vel;
     errorDot = -linearVel;
-    errorInt += error*dt;
+    errorInt = 0.8*errorInt + error*dt;
 
-    error3 = TF3->getPosition().getTranslation() - SF3->getPosition().getTranslation();
+    error3 = TF3->getPosition().getTranslation() - posElbowMes.getTranslation();//SF3->getPosition().getTranslation();
     Eigen::Vector3d linearVel3 = Jac3*joint_vel;
     errorDot3 = -linearVel3;
-    errorInt3 = 0.8*errorInt3 + error3*dt;
+    errorInt3 += error3*dt;
 
     const Eigen::VectorXd f1 = accTask->getStiffness() * eq
                                + accTask->getDamping() * deq
@@ -484,23 +519,27 @@ void KukaMingXingControllerRTNET::updateHook(){
     }
     else if (controlMode==1)
     {
-	tau = Jac.transpose() * f2;
+		tau = Jac.transpose() * f2;
 	//std::cout << "errorEE="<<(posdes_task2.getTranslation() - posEndEffMes.getTranslation()).transpose() << std::endl;
     }
-    else if (controlMode==2)
+	else if (controlMode==2)
     {
-            param_priority<<0, 1, 1, 
+		//tau = Jac3.transpose() * f3;
+		tau = proj.transpose() * f1 + proj2.transpose()*Jac.transpose() * f2  + proj3.transpose()*Jac3.transpose() * f3;
+	}
+    else if (controlMode==3)
+    {
+            /*param_priority<<0, 1, 1, 
 		    	    0, 0, 0,
-		    	    0, 1, 0;//ee>el>pos
+		    	    0, 1, 0;//ee>el>pos*/
         tau = proj.transpose() * f1 + proj2.transpose()*Jac.transpose() * f2 + proj3.transpose()*Jac3.transpose() * f3;
-        //tau = Jac3.transpose() * f3;
     }
           
-//    for(int i = 0; i < tau.size(); ++i)
-//    {
-//      if(tau(i) > tau_max(i)) tau(i) = tau_max(i);
-//      else if(tau(i) < -tau_max(i)) tau(i) = -tau_max(i);
-//    }
+    for(int i = 0; i < tau.size(); ++i)
+    {
+      if(tau(i) > 0.9*tau_max(i)) tau(i) = 0.9*tau_max(i);
+      else if(tau(i) < -0.9*tau_max(i)) tau(i) = -0.9*tau_max(i);
+    }
 
       
 
@@ -526,7 +565,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 
 	int start,end,endindex;
 	start = 1;
-	if (lemniscate)
+	if (lemniscate || controlMode==3)
 		end = 30000;
 	else
 		end = 10000;
@@ -581,14 +620,14 @@ void KukaMingXingControllerRTNET::updateHook(){
 		myfile2 <<errEE[endindex]<<"\n";	  
 
 
-		/*for (unsigned int i=0;i<endindex;++i)
+		for (unsigned int i=0;i<endindex;++i)
 		    myfile2 <<errEl[i]<<" ";
 		myfile2 <<errEl[endindex]<<"\n";	
 
 
 		for (unsigned int i=0;i<endindex;++i)
 		    myfile2 <<errQ[i]<<" ";
-		myfile2 <<errQ[endindex]<<"\n";*/	
+		myfile2 <<errQ[endindex]<<"\n";	
 
 
 		for (unsigned int i=0;i<endindex;++i)
@@ -657,8 +696,8 @@ void KukaMingXingControllerRTNET::updateHook(){
 
     if (counter <100000)
         counter += 1;
-    if (interpCounter <100&&interpolation)
-        interpCounter += 1;
+    if (interpCounterEE <10&&interpolationEE)
+        interpCounterEE += 1;
     if (interpCounterEl <10&&interpolationEl)
         interpCounterEl += 1;
 }
@@ -745,7 +784,7 @@ void KukaMingXingControllerRTNET::setEEdesTask2(std::vector<double> &eedes){
     posdes_task2 = Eigen::Displacementd(eedes[0], eedes[1], eedes[2]);
     TF->setPosition(posdes_task2);
     initPosSet = false;
-    interpCounter = 0;
+    interpCounterEE = 0;
 }
 
 void KukaMingXingControllerRTNET::setLemniscate(std::vector<double> &center, double lenY, double lenZ, double freq){
@@ -786,6 +825,10 @@ void KukaMingXingControllerRTNET::getPoseEE(){
                   << X.position.z << std::endl;
 }
 
+void KukaMingXingControllerRTNET::getPoseEl(){
+	std::cout << posElbowMes.getTranslation().transpose()<< std::endl;
+}
+
 void KukaMingXingControllerRTNET::getErrorEE(){
 	std::cout << "errorEE="<<error.transpose() << std::endl;
 }
@@ -809,8 +852,12 @@ void KukaMingXingControllerRTNET::getQ(){
 	std::cout << std::endl;
 }
 
-void KukaMingXingControllerRTNET::useInterpolation(bool interp){
-	interpolation = interp;
+void KukaMingXingControllerRTNET::useInterpolationEE(bool interp){
+	interpolationEE = interp;
+}
+
+void KukaMingXingControllerRTNET::useInterpolationEl(bool interp){
+	interpolationEl = interp;
 }
 
 void KukaMingXingControllerRTNET::setControlMode(int mode){

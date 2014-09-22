@@ -48,16 +48,16 @@ param_priority2 = array(0.0,0.0,1.0,0.0)
 
 var array posedes
 //posedes = array(0.5, -0.2, 0.65)
-//posedes = array(0.5, -0.1, 0.65)
+posedes = array(0.5, -0.1, 0.65)
 //posedes = array(0.5, -0.1, 0.55)
-posedes = array(0.5, -0.2, 0.55)
+//posedes = array(0.5, -0.2, 0.55)
 
 var array lemniCenter
 lemniCenter = array(0.5,-0.15, 0.6)
 //lemniCenter = array(0.16,0.0,0.36)
 
 var array posedes3
-posedes3 = array(0.1, 0.01, 0.65)
+posedes3 = array(-0.11, -0.01, 0.69)
 
 var array qdes
 qdes = array(-0.5, 0.05, 0.0, 1.5, 0.0, -1.0, 0.0)//0.0, -0.05, 0.0, 1.5, 0.0, -1.0, 0.0
@@ -67,19 +67,20 @@ MingXingController.setEEdes(posedes)
 MingXingController.setEldes(posedes3)
 //MingXingController.setLemniscate(lemniCenter, 0.15,0.1,0.5)//0.2,0.1,1.0 for error, 0.5,0.4,1.0 for video
 MingXingController.setLemniscate(lemniCenter, 0.05,0.08,1.0)//0.2,0.1,1.0 for error, 0.5,0.4,1.0 for video
-//MingXingController.useInterp(true)
+//MingXingController.useInterpEE(true)
+//MingXingController.useInterpEl(true)
 
-MingXingController.setStiffness(5.0, 200.0,30.0)
-//180.0
-MingXingController.setDamping(0.01, 45.0,12.0)
+MingXingController.setStiffness(5.0, 220.0,350.0)
+//200.0
+MingXingController.setDamping(0.01, 60.0,100.0)
 //45.0
-MingXingController.setIntegrator(0.00, 10.0,0.0)
+MingXingController.setIntegrator(0.00, 10.0,30.0)
 //10.0
 
 //MingXingController.setParamPriority(param_priority2)
-MingXingController.setMode(1)//0:posture, 1:ee, 2 GHC
+MingXingController.setMode(2)//0:posture, 1:ee, 2:elbow, 3: GHC
 
-MingXingController.useLemniscate(true)
+//MingXingController.useLemniscate(true)
 
 //MingXingController.setControlStrategy(7)
 

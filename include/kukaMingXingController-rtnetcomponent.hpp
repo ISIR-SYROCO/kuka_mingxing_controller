@@ -53,12 +53,12 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         
         Eigen::Displacementd posdes_task2;
         Eigen::Twistd veldes_task2;
-        int interpCounter;
+        int interpCounterEE;
         double EExinit;
 	double EEyinit;
 	double EEzinit;
         bool initPosSet;
-        bool interpolation;
+        bool interpolationEE;
         bool lemniscate;
         
         Eigen::MatrixXd proj2;
@@ -97,6 +97,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 
         Eigen::MatrixXd param_priority;
         
+		Eigen::Displacementd posEndEffMes;
+		Eigen::Displacementd posElbowMes;
         KDL::Jacobian J;
       	geometry_msgs::Pose X;
 
@@ -115,6 +117,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         std::pair<Eigen::VectorXd, Eigen::MatrixXd> sortRows(const Eigen::MatrixXd &C, const Eigen::MatrixXd &J);
 	
 	void getPoseEE();
+	void getPoseEl();
 	void getErrorEE();
 	void getErrorEl();
 	void getErrorQ();
@@ -130,7 +133,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 	void setDampingTask(double damping1, double damping2, double damping3);
   	void setIntegratorTask(double integrator1, double integrator2, double integrator3);
 	void setControlMode(int mode);
-        void useInterpolation(bool interp);
+        void useInterpolationEE(bool interp);
+	void useInterpolationEl(bool interp);
 	void useLemniscate(bool lemni);
 };
 
