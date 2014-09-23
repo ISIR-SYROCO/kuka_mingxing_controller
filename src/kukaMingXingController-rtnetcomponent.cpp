@@ -44,7 +44,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
   
     tau_max.resize(7);
     tau_max<<200,200,100,100,100,30,30;
-
+	//tau_max<<175,175,100,100,100,30,30;
     
     eq.resize(LWRDOF);
     deq.resize(LWRDOF);
@@ -219,6 +219,7 @@ void KukaMingXingControllerRTNET::updateHook(){
         posEndEffMes.qy()=(double)X.orientation.y;
         posEndEffMes.qz()=(double)X.orientation.z;
         posEndEffMes.qw()=(double)X.orientation.w;
+	}
 	if (!initPosSet)
         {
             EExinit = (double)X.position.x;
@@ -226,16 +227,27 @@ void KukaMingXingControllerRTNET::updateHook(){
             EEzinit = (double)X.position.z;
             initPosSet = true;
         }
+
+ /*   KDL::Frame f_ee = modelKDL.getSegmentPosition(7);
+    posEndEffMes.x()=f_ee.p.x();
+    posEndEffMes.y()=f_ee.p.y();
+    posEndEffMes.z()=f_ee.p.z();
+    double ee_x,ee_y,ee_z,ee_w;
+	f_ee.M.GetQuaternion (ee_x, ee_y, ee_z, ee_w); 
+    posEndEffMes.qx()=ee_x;
+    posEndEffMes.qy()=ee_y;
+    posEndEffMes.qz()=ee_z;
+    posEndEffMes.qw()=ee_w;
+	if (!initPosSet)
+        {
+            EExinit = f_ee.p.x();
+            EEyinit = f_ee.p.y();
+            EEzinit = f_ee.p.z();
+            initPosSet = true;
+        }
 	//std::cout<<"posEndEffMes="<<posEndEffMes.getTranslation().transpose()<<std::endl;
-
-    }
-
-    /*Eigen::Displacementd poseeMes;
-    KDL::Frame f_ee = modelKDL.getSegmentPosition(8);
-    poseeMes.x()=f_ee.p.x();
-    poseeMes.y()=f_ee.p.y();
-    poseeMes.z()=f_ee.p.z();*/
-
+*/
+    
 
     
     KDL::Frame f_elbow = modelKDL.getSegmentPosition(3);
@@ -276,7 +288,7 @@ void KukaMingXingControllerRTNET::updateHook(){
     double dt = 0.001;
     double coe = 0.0;
     double pi = 3.1415926;
-    double switch_duration = 100.0;
+    double switch_duration = 2000.0;
     double oneToZero = 0.0;
     double zeroToOne = 0.0;
 	if (controlMode==2)
@@ -304,15 +316,13 @@ void KukaMingXingControllerRTNET::updateHook(){
             /*param_priority<<0, 1, 1, 
 		    	    0, 0, 0,
 		    	    0, 1, 0;//ee>el>pos*/
-	    initPosSet = false;
-//	    initPosSetEl = false;
-//	    interpCounterEl = 0;
+
 	    std::cout <<"s2=ee>el>pos"<<std::endl;
 		}
 	  	else if ((counter > 250) && (counter <= (250+int(switch_duration))))
 	    {
  	        coe = counter - 250;
-            oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
+            oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(1,0) = oneToZero;
 	        param_priority(1,2) = oneToZero;
@@ -329,15 +339,13 @@ void KukaMingXingControllerRTNET::updateHook(){
             /*param_priority<<0, 1, 1, 
 		    	    0, 0, 1,
 		    	    0, 0, 0;//el>ee>pos */
-            initPosSet = false;
-//	    initPosSetEl = false;
-//	    interpCounterEl = 0;
+
 	    std::cout <<"s3=el>ee>pos"<<std::endl;
 	}
 	  else if ((counter > 9000) && (counter <= (9000+int(switch_duration))))
 	    {
  	        coe = counter - 9000;
-                oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
+            oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 
 	        param_priority(1,2) = zeroToOne;
@@ -350,21 +358,25 @@ void KukaMingXingControllerRTNET::updateHook(){
 	    getErrorQ();
             /*param_priority<<0, 1, 0, 
 		    	    0, 0, 0,
-		    	    0, 0, 1;//ee>pos*/
-            initPosSet = false;
-//            interpolationEE = true;
-//	    interpCounterEE = 0;
-//	    initPosSetEl = false;
-//	    interpCounterEl = 0;
+		    	    1, 1, 1;//ee>pos*/
+
 	    std::cout <<"s4=ee>pos"<<std::endl;
 	}
-	  else if ((counter > 16000) && (counter <= (16000+int(switch_duration))))
+	  else if ((counter > 16000) && (counter <= (16000+int(0.5*switch_duration))))
 	    {
  	        coe = counter - 16000;
-                oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
+            oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(0,2) = oneToZero;
 	        param_priority(1,2) = oneToZero;
+			param_priority(2,0) = zeroToOne;
+			param_priority(2,1) = zeroToOne;
+	    }
+	  else if ((counter > 17000) && (counter <= (17000+int(0.5*switch_duration))))
+	    {
+ 	        coe = counter - 17000;
+            oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
+	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(2,2) = zeroToOne;
 
 	    }
@@ -373,24 +385,35 @@ void KukaMingXingControllerRTNET::updateHook(){
 	    getErrorEE();
 	    getErrorEl();
 	    getErrorQ();
-            param_priority<<0, 1, 1, 
-		    	    0, 0, 0,
-		    	    0, 1, 0;//ee>el>pos
- //           initPosSet = false;
-//	    initPosSetEl = false;
-//	    interpCounterEl = 0;
+            /*param_priority<<0, 1, 1, 
+		    	    0, 0, 1,
+		    	    0, 0, 0;//el>ee>pos*/
 	    std::cout <<"s5=ee>el>pos"<<std::endl;
 	}
-	  else if ((counter > 23000) && (counter <= (23000+int(switch_duration))))
+	  else if ((counter > 23000) && (counter <= (23000+int(0.5*switch_duration))))
 	    {
  	        coe = counter - 23000;
-                oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; //1 to 0
+            oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
-	        param_priority(0,2) = zeroToOne;
-	        param_priority(2,1) = zeroToOne;
 	        param_priority(2,2) = oneToZero;
 
 	    }
+	  else if ((counter > 24000) && (counter <= (24000+int(0.5*switch_duration))))
+	    {
+ 	        coe = counter - 24000;
+            oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
+	        zeroToOne = 1.0 - oneToZero;
+	        param_priority(0,2) = zeroToOne;
+			param_priority(2,0) = oneToZero;
+	        param_priority(1,2) = zeroToOne;
+			param_priority(2,1) = oneToZero;
+	    }
+	else if (counter == 25001)
+	{
+            param_priority<<0, 1, 1, 
+		    	    0, 0, 1,
+		    	    0, 0, 0;//ee>el>pos
+	}
         else if (counter==30000)
 	{
 	    getErrorEE();
@@ -820,9 +843,7 @@ void KukaMingXingControllerRTNET::setIntegratorTask(double integrator1, double i
 }
 
 void KukaMingXingControllerRTNET::getPoseEE(){
-	std::cout << X.position.x << " " 
-                  << X.position.y << " "
-                  << X.position.z << std::endl;
+	std::cout << posEndEffMes.getTranslation().transpose() << std::endl;
 }
 
 void KukaMingXingControllerRTNET::getPoseEl(){
