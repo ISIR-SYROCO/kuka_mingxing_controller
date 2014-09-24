@@ -28,16 +28,16 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     this->addOperation("useLemniscate", &KukaMingXingControllerRTNET::useLemniscate, this, RTT::OwnThread);
   
     //plot data
-    errEE.resize(60000);
-    errEl.resize(60000);
-    errQ.resize(60000);
-    vecT.resize(60000);
-    eex.resize(60000);
-    eey.resize(60000);
-    eez.resize(60000);
-    eerefx.resize(60000);
-    eerefy.resize(60000);
-    eerefz.resize(60000);
+    errEE.resize(100000);
+    errEl.resize(100000);
+    errQ.resize(100000);
+    vecT.resize(100000);
+    eex.resize(100000);
+    eey.resize(100000);
+    eez.resize(100000);
+    eerefx.resize(100000);
+    eerefy.resize(100000);
+    eerefz.resize(100000);
     doPlot = true;
 	myfile2.open ("kuka_task_error.txt");	
 	myfile.open ("kukadata.txt");
@@ -331,7 +331,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	        param_priority(0,2) = zeroToOne;
 	        param_priority(2,1) = zeroToOne;
 	    }
-        else if (counter==9000)
+        else if (counter==15000)
 		{
 	    	getErrorEE();
 	    getErrorEl();
@@ -342,16 +342,16 @@ void KukaMingXingControllerRTNET::updateHook(){
 
 	    std::cout <<"s3=el>ee>pos"<<std::endl;
 	}
-	  else if ((counter > 9000) && (counter <= (9000+int(switch_duration))))
+	  else if ((counter > 15000) && (counter <= (15000+int(switch_duration))))
 	    {
- 	        coe = counter - 9000;
+ 	        coe = counter - 15000;
             oneToZero = (cos(coe * pi/switch_duration) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 
 	        param_priority(1,2) = zeroToOne;
 	        param_priority(2,1) = oneToZero;
 	    }
-        else if (counter==16000)
+        else if (counter==33000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -362,9 +362,9 @@ void KukaMingXingControllerRTNET::updateHook(){
 
 	    std::cout <<"s4=ee>pos"<<std::endl;
 	}
-	  else if ((counter > 16000) && (counter <= (16000+int(0.5*switch_duration))))
+	  else if ((counter > 33000) && (counter <= (33000+int(0.5*switch_duration))))
 	    {
- 	        coe = counter - 16000;
+ 	        coe = counter - 33000;
             oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(0,2) = oneToZero;
@@ -372,15 +372,15 @@ void KukaMingXingControllerRTNET::updateHook(){
 			param_priority(2,0) = zeroToOne;
 			param_priority(2,1) = zeroToOne;
 	    }
-	  else if ((counter > 17000) && (counter <= (17000+int(0.5*switch_duration))))
+	  else if ((counter > 34000) && (counter <= (34000+int(0.5*switch_duration))))
 	    {
- 	        coe = counter - 17000;
+ 	        coe = counter - 34000;
             oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(2,2) = zeroToOne;
 
 	    }
-        else if (counter==23000)
+        else if (counter==49000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -390,17 +390,17 @@ void KukaMingXingControllerRTNET::updateHook(){
 		    	    0, 0, 0;//el>ee>pos*/
 	    std::cout <<"s5=ee>el>pos"<<std::endl;
 	}
-	  else if ((counter > 23000) && (counter <= (23000+int(0.5*switch_duration))))
+	  else if ((counter > 49000) && (counter <= (49000+int(0.5*switch_duration))))
 	    {
- 	        coe = counter - 23000;
+ 	        coe = counter - 49000;
             oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(2,2) = oneToZero;
 
 	    }
-	  else if ((counter > 24000) && (counter <= (24000+int(0.5*switch_duration))))
+	  else if ((counter > 50000) && (counter <= (50000+int(0.5*switch_duration))))
 	    {
- 	        coe = counter - 24000;
+ 	        coe = counter - 50000;
             oneToZero = (cos(coe * pi/(0.5*switch_duration)) + 1.0)/2.0; 
 	        zeroToOne = 1.0 - oneToZero;
 	        param_priority(0,2) = zeroToOne;
@@ -408,13 +408,13 @@ void KukaMingXingControllerRTNET::updateHook(){
 	        param_priority(1,2) = zeroToOne;
 			param_priority(2,1) = oneToZero;
 	    }
-	else if (counter == 25001)
+	else if (counter == 51001)
 	{
             param_priority<<0, 1, 1, 
 		    	    0, 0, 1,
 		    	    0, 0, 0;//ee>el>pos
 	}
-        else if (counter==30000)
+        else if (counter==63000)
 	{
 	    getErrorEE();
 	    getErrorEl();
@@ -435,7 +435,7 @@ void KukaMingXingControllerRTNET::updateHook(){
         Elzinit = SF3->getPosition().getTranslation()[2];
         initPosSetEl = true;
     }
-    if (controlMode==1&&lemniscate)
+    if ((controlMode==1&&lemniscate)||(controlMode==3&&lemniscate))
     {
         
         double time = dt*counter;
@@ -589,7 +589,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	int start,end,endindex;
 	start = 1;
 	if (lemniscate || controlMode==3)
-		end = 30000;
+		end = 63000;
 	else
 		end = 10000;
 	endindex = end-start-1;

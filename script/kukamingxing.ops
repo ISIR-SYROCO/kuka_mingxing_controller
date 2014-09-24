@@ -71,21 +71,30 @@ MingXingController.setLemniscate(lemniCenter, 0.05,0.08,1.0)//0.2,0.1,1.0 for er
 //MingXingController.useInterpEE(true)
 //MingXingController.useInterpEl(true)
 
-//mode = 1 or 2
+//mode = 1
+//MingXingController.setStiffness(5.0, 300.0,200.0)
+//MingXingController.setDamping(0.01,40.0,60.0)
+//MingXingController.setIntegrator(0.00, 0.0,0.0)
+
+//mode = 2
 //MingXingController.setStiffness(5.0, 300.0,200.0)
 //MingXingController.setDamping(0.01,40.0,60.0)
 //MingXingController.setIntegrator(0.00, 10.0,0.0)
 
 //mode = 3 fixed target
-MingXingController.setStiffness(5.0, 300.0,300.0)
-MingXingController.setDamping(0.005,70.0,70.0)
-MingXingController.setIntegrator(0.00, 0.0,0.0)
+//MingXingController.setStiffness(5.0, 300.0,300.0)
+//MingXingController.setDamping(0.005,70.0,70.0)
+//MingXingController.setIntegrator(0.00, 0.0,0.0)
 
+//mode = 3 lemniscate
+MingXingController.setStiffness(5.0, 300.0,300.0)
+MingXingController.setDamping(0.01,50.0,80.0)
+MingXingController.setIntegrator(0.00, 0.0,0.0)
 
 //MingXingController.setParamPriority(param_priority2)
 MingXingController.setMode(3)//0:posture, 1:ee, 2:elbow, 3: GHC
 
-//MingXingController.useLemniscate(true)
+MingXingController.useLemniscate(true)
 
 //MingXingController.setControlStrategy(7)
 
