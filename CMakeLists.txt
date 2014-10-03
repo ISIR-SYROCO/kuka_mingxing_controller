@@ -36,6 +36,11 @@ if(NOT PC_KUKAKDL_FOUND)
     message("Failed to detect kukakdl")
 endif(NOT PC_KUKAKDL_FOUND)
 
+PKG_CHECK_MODULES(PC_ORCKUKAKDL orckukakdl REQUIRED)
+if(NOT PC_ORCKUKAKDL_FOUND)
+    message("Failed to detect orckukakdl")
+endif(NOT PC_ORCKUKAKDL_FOUND)
+
 # Defines the orocos_* cmake macros. See that file for additional
 # documentation.
 include( ${OROCOS-RTT_USE_FILE_PATH}/UseOROCOS-RTT.cmake )

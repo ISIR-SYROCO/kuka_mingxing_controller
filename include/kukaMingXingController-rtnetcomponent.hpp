@@ -13,6 +13,7 @@
 #include <orcisir/Solvers/OneLevelSolver.h>
 #include "kukafixed.h"
 #include <kukakdl/kukakdl.hpp>
+#include <kukakdl/orckukakdl.hpp>
 
 #include <orc/control/Feature.h>
 #include <orc/control/FullState.h>
@@ -27,7 +28,8 @@
 class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
     public:
         KukaMingXingControllerRTNET(std::string const& name);
-		kukafixed* model;
+		//kukafixed* model;
+		OrcKukaKDL* model;
         KukaKDL modelKDL;
         orcisir::OneLevelSolverWithQuadProg solver;
         orcisir::GHCJTController* ctrl;
@@ -92,6 +94,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 	double ki1,ki2,ki3;
         
         Eigen::VectorXd tau;
+		Eigen::VectorXd tauJT;
         Eigen::VectorXd tau_max;
         std::vector<double> joint_position_command;
 
@@ -109,6 +112,8 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 	std::ofstream myfile;
 	//myfile.open ("kukadata.txt", std::ofstream::app);
 	std::ofstream myfile2;
+	std::ofstream torqueCtrl;
+	std::ofstream torqueJT;
 	//myfile2.open ("kuka_task_error.txt", std::ofstream::app);	
 
         void updateHook();

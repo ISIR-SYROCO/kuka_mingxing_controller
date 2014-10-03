@@ -21,7 +21,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 	this->addOperation("getPoseEl", &KukaMingXingControllerRTNET::getPoseEl, this, RTT::OwnThread);
     this->addOperation("getErrorEE", &KukaMingXingControllerRTNET::getErrorEE, this, RTT::OwnThread);
     this->addOperation("getTau", &KukaMingXingControllerRTNET::getTau, this, RTT::OwnThread);
-    this->addOperation("getQ", &KukaMingXingControllerRTNET::getQ, this, RTT::OwnThread);
+    //this->addOperation("getQ", &KukaMingXingControllerRTNET::getQ, this, RTT::OwnThread);
     this->addOperation("useInterpEE", &KukaMingXingControllerRTNET::useInterpolationEE, this, RTT::OwnThread);
 	this->addOperation("useInterpEl", &KukaMingXingControllerRTNET::useInterpolationEl, this, RTT::OwnThread);
     this->addOperation("setMode", &KukaMingXingControllerRTNET::setControlMode, this, RTT::OwnThread);//0:posture, 1:ee, 2 GHC
@@ -39,12 +39,20 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     eerefy.resize(100000);
     eerefz.resize(100000);
     doPlot = true;
-	myfile2.open ("kuka_task_error.txt");	
-	myfile.open ("kukadata.txt");
+	if (doPlot)
+	{
+		myfile2.open ("kuka_task_error.txt");	
+		myfile.open ("kukadata.txt");
+		torqueJT.open("torqueJT.txt");
+		torqueCtrl.open("torqueCtrl.txt");
+	}
+
   
     tau_max.resize(7);
     tau_max<<200,200,100,100,100,30,30;
 	//tau_max<<175,175,100,100,100,30,30;
+	//tau_max<<10,10,10,10,10,10,10;
+	//tau_max<<2,2,2,2,2,2,2;
     
     eq.resize(LWRDOF);
     deq.resize(LWRDOF);
@@ -56,8 +64,11 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     ki2 = 0.0;
     ki3 = 0.0;
 
-	model = new kukafixed("kuka");
+	//model = new kukafixed("kuka");
+	model = new OrcKukaKDL("kuka");
+
     ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
+
     counter = 0;
     interpCounterEE = 0;
     interpCounterEl = 0;
@@ -67,15 +78,16 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     interpolationEE = false;
     interpolationEl = false;
     lemniscate = false;
-    
+
     FMS = new orc::FullModelState("torqueTask.FModelState", *model, orc::FullState::INTERNAL);
+
     FTS = new orc::FullTargetState("torqueTask.FTargetState", *model, orc::FullState::INTERNAL);
     feat = new orc::FullStateFeature("torqueTask", *FMS);
     featDes = new orc::FullStateFeature("torqueTask.Des", *FTS);
     qdes_task1.resize(7);
     qdes_task1<<0.0,-0.05,0.0,1.5,0.0,-1.2,0.0;
     FTS->set_q(qdes_task1);
-    
+
     accTask = &(ctrl->createGHCJTTask("accTask", *feat, *featDes));
 
     ctrl->addTask(*accTask);
@@ -88,44 +100,45 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     lemniLenY = 0.8;
     lemniLenZ = 0.6;
     lemniFreq = 1.0;
-    SF = new orc::SegmentFrame("frame.SFrame", *model, "kuka.07", Eigen::Displacementd(0.0,0.0,0.0));
+    SF = new orc::SegmentFrame("frame.SFrame", *model, "07", Eigen::Displacementd(0.0,0.0,0.0));
     TF = new orc::TargetFrame("frame.TFrame", *model);
     feat2 = new orc::PositionFeature("frame", *SF, orc::XYZ);
     featDes2 = new orc::PositionFeature("frame.Des", *TF, orc::XYZ);
     posdes_task2 = Eigen::Displacementd(0.0,0.49,0.59);//0.3,0.0,0.5
     TF->setPosition(posdes_task2);
-    TF->setVelocity(Eigen::Twistd());
-    TF->setAcceleration(Eigen::Twistd());
+    TF->setVelocity(Eigen::Twistd::Zero());
+    TF->setAcceleration(Eigen::Twistd::Zero());
 
     accTask2 = &(ctrl->createGHCJTTask("accTask2", *feat2, *featDes2));
-    
     ctrl->addTask(*accTask2);
     accTask2->activateAsObjective();
-    accTask2->setStiffness(20);
-    accTask2->setDamping(6);
+    accTask2->setStiffness(10);
+    accTask2->setDamping(3);
     proj2=Eigen::MatrixXd::Zero(LWRDOF,LWRDOF);
 
-    SF3 = new orc::SegmentFrame("frame3.SFrame", *model, "kuka.04", Eigen::Displacementd());
+    SF3 = new orc::SegmentFrame("frame3.SFrame", *model, "02", Eigen::Displacementd());
     TF3 = new orc::TargetFrame("frame3.TFrame", *model);
     feat3 = new orc::PositionFeature("frame3", *SF3, orc::XYZ);
     featDes3 = new orc::PositionFeature("frame3.Des", *TF3, orc::XYZ);
     posdes_task3 = Eigen::Displacementd(-0.3,-0.2,0.5);
     TF3->setPosition(posdes_task3);
-    TF3->setVelocity(Eigen::Twistd());
-    TF3->setAcceleration(Eigen::Twistd());
+    TF3->setVelocity(Eigen::Twistd::Zero());
+    TF3->setAcceleration(Eigen::Twistd::Zero());
 
     accTask3 = &(ctrl->createGHCJTTask("accTask3", *feat3, *featDes3));
     
     ctrl->addTask(*accTask3);
     accTask3->activateAsObjective();
-    accTask3->setStiffness(20);
-    accTask3->setDamping(6);
+    accTask3->setStiffness(10);
+    accTask3->setDamping(3);
     proj3=Eigen::MatrixXd::Zero(LWRDOF,LWRDOF);
 
     joint_position_command.assign(LWRDOF, 0.0);
 
     tau.resize(LWRDOF);
     tau.setConstant(0);
+	tauJT.resize(LWRDOF);
+	tauJT.setZero();
 
     ctrl->setActiveTaskVector();
 
@@ -179,7 +192,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 	    FTS->set_q(joint_pos);
 	//std::cout << "Jpos " << joint_pos.transpose() << std::endl;
     }
-    
+    //SF->getPosition() ;
 
     if(joint_vel_fs == RTT::NewData){
         
@@ -190,7 +203,6 @@ void KukaMingXingControllerRTNET::updateHook(){
 	//std::cout << "joint vel " << joint_vel.transpose() << std::endl;
     }
     
-
     if(joint_trq_fs == RTT::NewData){        
         
         
@@ -209,7 +221,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 //		Jac = JacFull.block(0,0, 3,7);
 //    }
     
-    
+    /*
     RTT::FlowStatus cartPos_fs =  iport_cart_pos.read(X);
     if(cartPos_fs==RTT::NewData){
         posEndEffMes.x()=(double)X.position.x;
@@ -227,8 +239,8 @@ void KukaMingXingControllerRTNET::updateHook(){
             EEzinit = (double)X.position.z;
             initPosSet = true;
         }
-
- /*   KDL::Frame f_ee = modelKDL.getSegmentPosition(7);
+*/
+    KDL::Frame f_ee = modelKDL.getSegmentPosition(7);
     posEndEffMes.x()=f_ee.p.x();
     posEndEffMes.y()=f_ee.p.y();
     posEndEffMes.z()=f_ee.p.z();
@@ -246,7 +258,7 @@ void KukaMingXingControllerRTNET::updateHook(){
             initPosSet = true;
         }
 	//std::cout<<"posEndEffMes="<<posEndEffMes.getTranslation().transpose()<<std::endl;
-*/
+
     
 
     
@@ -267,13 +279,30 @@ void KukaMingXingControllerRTNET::updateHook(){
         Elzinit = f_elbow.p.z();
         initPosSetEl = true;
     }
-
+    
   
+	/*
     //modelKDL.computeJacobian();
     Jac = modelKDL.getSegmentJacobian(8).data.block(0,0, 3,7);// accTask2->getJacobian();
     Jac3 = modelKDL.getSegmentJacobian(3).data.block(0,0, 3,7); // accTask3->getJacobian();
+	*/
 
-    //std::cout<<"Jac3="<<Jac3<<std::endl;
+	Jac = accTask2->getJacobian();//feat2->computeJacobian();
+	Jac3 = accTask3->getJacobian();//feat3->computeJacobian();
+
+
+	//Jac = model->getSegmentJacobian(8).block(3,0, 3,7);
+	//std::cout << "Jac kdl " << std::endl;
+	//std::cout << Jac<< std::endl;
+	//std::cout << "Jac orc " << std::endl;
+	//std::cout << accTask2->getJacobian() << std::endl;
+	//Jac3 = model->getSegmentJacobian(3).block(3,0, 3,7);
+	
+	//posElbowMes = SF3->getPosition();
+	//posEndEffMes = SF->getPosition();
+
+    //std::cout<<"Jac="<<model->getSegmentJacobian(8)<<std::endl;
+	//std::cout << "KDL JAC " << modelKDL.getSegmentJacobian(8).data << std::endl;
     /*Eigen::MatrixXd JacP = Eigen::MatrixXd::Zero(3,LWRDOF);
     RTT::FlowStatus jacobian_fs = jacobianPort.read(J);
     Eigen::MatrixXd JacFull(6,LWRDOF);
@@ -423,9 +452,9 @@ void KukaMingXingControllerRTNET::updateHook(){
     }  
     if (!initPosSet)
     {
-        EExinit = (double)X.position.x;
-        EEyinit = (double)X.position.y;
-        EEzinit = (double)X.position.z;
+        EExinit = SF->getPosition().getTranslation()[0];
+        EEyinit = SF->getPosition().getTranslation()[1];
+        EEzinit = SF->getPosition().getTranslation()[2];
         initPosSet = true;
     }
     if (!initPosSetEl)
@@ -464,7 +493,28 @@ void KukaMingXingControllerRTNET::updateHook(){
     	TF3->setPosition(posdes3);
     }
 
-    //compute task error
+    //Set task projector
+
+    ctrl->setTaskProjectors(param_priority);
+
+	ctrl->doUpdateProjector();
+    //Compute tau
+    ctrl->computeOutput(tau); 
+    //std::cout<<"posModel="<<SF->getPosition().getTranslation().transpose()<<std::endl;
+    //std::cout<<"JacModel="<<accTask2->getJacobian()<<std::endl;
+	//std::cout<<"tau controller" << tau.transpose() << std::endl;
+	//std::cout << "error task2 in ctrl" << accTask2->getError().transpose() << std::endl;
+//std::cout << "errorDot task2 in ctrl" << accTask2->getErrorDot().transpose() << std::endl;
+	for(int i = 0; i < tau.size(); ++i)
+    {
+      if(tau(i) > 0.9*tau_max(i)) tau(i) = 0.9*tau_max(i);
+      else if(tau(i) < -0.9*tau_max(i)) tau(i) = -0.9*tau_max(i);
+    }
+
+	eq = accTask->getError();
+	error = accTask2->getError();
+	error3 = accTask3->getError();
+ /*   //compute task error
     eq = FTS->q() - joint_pos;
     deq = - joint_vel;
     eqInt += eq*dt;
@@ -493,18 +543,19 @@ void KukaMingXingControllerRTNET::updateHook(){
     const Eigen::VectorXd f3 = accTask3->getStiffness() * error3
                                + accTask3->getDamping() * errorDot3
 			       + ki3 *errorInt3;
-    //std::cout << "f3 " << f3.transpose() << std::endl;
+    //std::cout << "f2 " << f2.transpose() << std::endl;
     //std::cout << "eq " << eq.transpose() << std::endl;
     //std::cout << "deq " << deq.transpose() << std::endl;
-    //std::cout << "error " << error.transpose() << std::endl;
-    //std::cout << "errorDot " << errorDot.transpose() << std::endl;
+    std::cout << "error task2" << error.transpose() << std::endl;
+    std::cout << "errorDot task2" << errorDot.transpose() << std::endl;
     //if (counter>=1500&&counter<2500)
     //    std::cout << "el pos " << SF3->getPosition().getTranslation().transpose() << std::endl;
+	//std::cout<<"proj2="<<proj2<<std::endl;
+	//std::cout<<"jac2="<<Jac<<std::endl;
+*/
 
-    //Set task projector
-    ctrl->setTaskProjectors(param_priority);
-
-    // UpdateAugmentedJacobian
+	
+    /*// UpdateAugmentedJacobian
     Eigen::MatrixXd augmentedJacobian = MatrixXd::Zero(feat->getDimension()+feat2->getDimension()+feat3->getDimension(), LWRDOF);
     int rowindex = 0;
     int taskdim;
@@ -523,18 +574,20 @@ void KukaMingXingControllerRTNET::updateHook(){
     //Update projector
     computeProjector(accTask->getPriority(), augmentedJacobian, proj);
     accTask->setProjector(proj);
-
+	
     computeProjector(accTask2->getPriority(), augmentedJacobian, proj2);
     accTask2->setProjector(proj2);
  
     computeProjector(accTask3->getPriority(), augmentedJacobian, proj3);
-    accTask3->setProjector(proj3);
-   
-    //Compute tau
-    ctrl->computeOutput(tau); 
-    //std::cout<<"posModel="<<SF->getPosition().getTranslation().transpose()<<std::endl;
-    //std::cout<<"JacModel="<<accTask2->getJacobian()<<std::endl;
+    accTask3->setProjector(proj3);*/
 
+/*	proj = accTask->getProjector();
+    proj2 = accTask2->getProjector();
+	proj3 = accTask3->getProjector();
+	
+
+	
+	
     if (controlMode==0) 
     {
         tau = f1;
@@ -552,22 +605,21 @@ void KukaMingXingControllerRTNET::updateHook(){
 	}
     else if (controlMode==3)
     {
-            /*param_priority<<0, 1, 1, 
-		    	    0, 0, 0,
-		    	    0, 1, 0;//ee>el>pos*/
+            //param_priority<<0, 1, 1, 
+		    //	    0, 0, 0,
+		    //	    0, 1, 0;//ee>el>pos
         tau = proj.transpose() * f1 + proj2.transpose()*Jac.transpose() * f2 + proj3.transpose()*Jac3.transpose() * f3;
     }
-          
+    //std::cout << "Tau Jt " << tau.transpose() << std::endl;
     for(int i = 0; i < tau.size(); ++i)
     {
-      if(tau(i) > 0.9*tau_max(i)) tau(i) = 0.9*tau_max(i);
-      else if(tau(i) < -0.9*tau_max(i)) tau(i) = -0.9*tau_max(i);
+      if(tau(i) > 0.8*tau_max(i)) tau(i) = 0.8*tau_max(i);
+      else if(tau(i) < -0.8*tau_max(i)) tau(i) = -0.8*tau_max(i);
     }
+    
+*/
 
-      
-
-//    std::cout << "tau="<<tau.transpose() << " f2= "<< f2.transpose() << std::endl;
-
+	//std::cout<<"tau" << tau.transpose() << std::endl;
     //Send tau
     if (fri_cmd_mode){
         if(requiresControlMode(30)){
@@ -592,6 +644,7 @@ void KukaMingXingControllerRTNET::updateHook(){
 		end = 63000;
 	else
 		end = 10000;
+	//end = 2000;
 	endindex = end-start-1;
 	if (counter>=start &&counter <= end)
     	{
@@ -659,6 +712,14 @@ void KukaMingXingControllerRTNET::updateHook(){
 	    }
 	    //myfile2.close();
 	}
+	/*if (counter <= end)
+    {
+		    torqueCtrl <<tau[0]<<" ";  
+	}
+	if (counter <= end)
+    {
+		    torqueJT <<tauJT[0]<<" ";  
+	}*/
 		/*std::cout<<"eex=[";
 		for (unsigned int i=0;i<1499;++i)
 		    std::cout<<eex[i]<<",";
