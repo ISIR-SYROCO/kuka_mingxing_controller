@@ -67,7 +67,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 	//model = new kukafixed("kuka");
 	model = new OrcKukaKDL("kuka");
 
-    ctrl = new orcisir::GHCJTController("myCtrl", *model, solver, true, false);
+    ctrl = new orcisir::ISIRController("myCtrl", *model, solver, false, true);
 
     counter = 0;
     interpCounterEE = 0;
@@ -88,8 +88,8 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     qdes_task1<<0.0,-0.05,0.0,1.5,0.0,-1.2,0.0;
     FTS->set_q(qdes_task1);
 
-    accTask = &(ctrl->createGHCJTTask("accTask", *feat, *featDes));
-
+    accTask = &(ctrl->createISIRTask("accTask", *feat, *featDes));
+	accTask->initAsAccelerationTask();
     ctrl->addTask(*accTask);
     accTask->activateAsObjective();
     accTask->setStiffness(9);
@@ -109,7 +109,8 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     TF->setVelocity(Eigen::Twistd::Zero());
     TF->setAcceleration(Eigen::Twistd::Zero());
 
-    accTask2 = &(ctrl->createGHCJTTask("accTask2", *feat2, *featDes2));
+    accTask2 = &(ctrl->createISIRTask("accTask2", *feat2, *featDes2));
+	accTask2->initAsAccelerationTask();
     ctrl->addTask(*accTask2);
     accTask2->activateAsObjective();
     accTask2->setStiffness(10);
@@ -125,8 +126,8 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
     TF3->setVelocity(Eigen::Twistd::Zero());
     TF3->setAcceleration(Eigen::Twistd::Zero());
 
-    accTask3 = &(ctrl->createGHCJTTask("accTask3", *feat3, *featDes3));
-    
+    accTask3 = &(ctrl->createISIRTask("accTask3", *feat3, *featDes3));
+    accTask3->initAsAccelerationTask();
     ctrl->addTask(*accTask3);
     accTask3->activateAsObjective();
     accTask3->setStiffness(10);
@@ -151,7 +152,7 @@ KukaMingXingControllerRTNET::KukaMingXingControllerRTNET(std::string const& name
 		    0, 1, 0;
     ctrl->setTaskProjectors(param_priority);
 
-    //ctrl->setGSHCConstraint();
+    ctrl->setGSHCConstraint();
 }
 
 void KukaMingXingControllerRTNET::updateHook(){
@@ -496,13 +497,13 @@ void KukaMingXingControllerRTNET::updateHook(){
     //Set task projector
 
     ctrl->setTaskProjectors(param_priority);
-
+	
 	ctrl->doUpdateProjector();
     //Compute tau
     ctrl->computeOutput(tau); 
     //std::cout<<"posModel="<<SF->getPosition().getTranslation().transpose()<<std::endl;
     //std::cout<<"JacModel="<<accTask2->getJacobian()<<std::endl;
-	//std::cout<<"tau controller" << tau.transpose() << std::endl;
+	std::cout<<"tau controller" << tau.transpose() << std::endl;
 	//std::cout << "error task2 in ctrl" << accTask2->getError().transpose() << std::endl;
 //std::cout << "errorDot task2 in ctrl" << accTask2->getErrorDot().transpose() << std::endl;
 	for(int i = 0; i < tau.size(); ++i)

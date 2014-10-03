@@ -9,9 +9,9 @@
 
 #include <friRTNetExampleAbstract.hpp>
 
-#include <orcisir/GHCJTController.h>
+#include <orcisir/ISIRController.h>
 #include <orcisir/Solvers/OneLevelSolver.h>
-#include "kukafixed.h"
+//#include "kukafixed.h"
 #include <kukakdl/kukakdl.hpp>
 #include <kukakdl/orckukakdl.hpp>
 
@@ -32,7 +32,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
 		OrcKukaKDL* model;
         KukaKDL modelKDL;
         orcisir::OneLevelSolverWithQuadProg solver;
-        orcisir::GHCJTController* ctrl;
+        orcisir::ISIRController* ctrl;
 	int counter;
         int controlMode;
         //Task1
@@ -40,7 +40,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         orc::FullTargetState* FTS;
         orc::FullStateFeature* feat;
         orc::FullStateFeature* featDes;
-        orcisir::GHCJTTask* accTask;
+        orcisir::ISIRTask* accTask;
         
         Eigen::VectorXd qdes_task1;
         
@@ -51,7 +51,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         orc::TargetFrame* TF;
         orc::PositionFeature* feat2;
         orc::PositionFeature* featDes2;
-        orcisir::GHCJTTask* accTask2;
+        orcisir::ISIRTask* accTask2;
         
         Eigen::Displacementd posdes_task2;
         Eigen::Twistd veldes_task2;
@@ -70,7 +70,7 @@ class KukaMingXingControllerRTNET : public FriRTNetExampleAbstract{
         orc::TargetFrame* TF3;
         orc::PositionFeature* feat3;
         orc::PositionFeature* featDes3;
-        orcisir::GHCJTTask* accTask3;
+        orcisir::ISIRTask* accTask3;
         
         Eigen::Displacementd posdes_task3;
         Eigen::Twistd veldes_task3;
